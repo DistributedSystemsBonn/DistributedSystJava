@@ -1,0 +1,9 @@
+Compiling:
+javac -sourcepath ./src -d bin src/io/github/cherurg/assigment_b/Main.java
+
+Running:
+java -classpath ./bin io.github.cherurg.assigment_b.Main
+
+Drawing learning curve:
+gnuplot
+plot "learning.curve" u 1 with lines
