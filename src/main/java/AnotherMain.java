@@ -6,15 +6,15 @@ import org.apache.xmlrpc.webserver.WebServer;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-public class Main {
+public class AnotherMain {
     public static void main(String[] args) throws Exception {
-        Node node = new Node("25.95.123.198:8008");
+        Node node = new Node("25.95.123.198:7808");
         PdsServiceImpl.setNode(node);
 
         new Thread() {
             public void run() {
                 try {
-                    WebServer webServer = new WebServer(8008);
+                    WebServer webServer = new WebServer(7808);
                     XmlRpcServer xmlRpcServer = webServer.getXmlRpcServer();
                     PropertyHandlerMapping phm = new PropertyHandlerMapping();
                     phm.setVoidMethodEnabled(true);

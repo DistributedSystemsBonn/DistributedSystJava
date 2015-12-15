@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.apache.xmlrpc.client.util.ClientFactory;
 
 public class Node {
     private NodeInfo self;
@@ -14,18 +15,24 @@ public class Node {
 
     private List<NodeInfo> dictionary;
 
-    public Node() {
+    public Node(String ip) {
         self = new NodeInfo();
         self.setId(UUID.randomUUID());
-        self.setIp("0.0.0.0:8080");
+        self.setIp(ip);
+
+        dictionary = new ArrayList<NodeInfo>();
+        // Принимает
+        // join
+        // sign off
+        // start
     }
 
-    public List<NodeInfo> join(String ip) {
+    public List<NodeInfo> join(String ipPort) {
         // запрос
         List<NodeInfo> receivedDictionary;
         try {
-            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-            config.setServerURL(new URL(ip));
+/*            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+            config.setServerURL(new URL(ipPort));
 
             XmlRpcClient client = new XmlRpcClient();
             client.setConfig(config);
@@ -33,7 +40,43 @@ public class Node {
             // handleJoin прибавляет к своему dictionary полученный.
             // handleJoin рассылает словарь всей известной сети (и сторой, и новой).
             // данные
-            receivedDictionary = (List<NodeInfo>) client.execute("Calculator.handleJoin", dictionary);
+            receivedDictionary = (List<NodeInfo>) client.execute("Calculator.handleJoin", dictionary);*/
+
+            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
+            config.setServerURL(new URL("http://" + ipPort + "/xmlrpc"));
+            config.setEnabledForExtensions(true);
+            config.setConnectionTimeout(60 * 1000);
+            config.setReplyTimeout(60 * 1000);
+            XmlRpcClient client = new XmlRpcClient();
+            client.setConfig(config);
+            ClientFactory factory = new ClientFactory(client);
+            Host pds = (Host) factory.newInstance(Host.class);
+
+            Object[] ipPorts = pds.getHosts(self.getIp());
+
+            NodeInfo nodeInfo = new NodeInfo();
+            nodeInfo.setIp(ipPort);
+            dictionary.add(nodeInfo);
+
+            for (Object s : ipPorts) {
+                nodeInfo = new NodeInfo();
+                nodeInfo.setIp((String) s);
+                dictionary.add(nodeInfo);
+
+                config = new XmlRpcClientConfigImpl();
+                config.setServerURL(new URL("http://" + nodeInfo.getIp() + "/xmlrpc"));
+                config.setEnabledForExtensions(true);
+                config.setConnectionTimeout(60 * 1000);
+                config.setReplyTimeout(60 * 1000);
+                client = new XmlRpcClient();
+                client.setConfig(config);
+                factory = new ClientFactory(client);
+                pds = (Host) factory.newInstance(Host.class);
+
+                pds.addNewHost(self.getIp());
+            }
+
+           // System.out.println(pds.echo("Hello"));
 
         } catch (Exception ex) {
             System.out.println(ex);
@@ -100,5 +143,15 @@ public class Node {
 
     public List<NodeInfo> getDictionary() {
         return dictionary;
+    }
+
+    public String[] getIpPorts() {
+        String[] ipPorts = new String[dictionary.size()];
+
+        for (int i = 0; i < dictionary.size(); i++) {
+            ipPorts[i] = dictionary.get(i).getIp();
+        }
+
+        return ipPorts;
     }
 }
