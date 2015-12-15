@@ -8,7 +8,8 @@ import java.io.InputStreamReader;
 
 public class AnotherMain {
     public static void main(String[] args) throws Exception {
-        Node node = new Node("25.83.73.160:9177");
+        //25.95.123.198 - Maxim
+        Node node = new Node("25.95.123.198:9177");
         PdsServiceImpl.setNode(node);
 
         new Thread() {
