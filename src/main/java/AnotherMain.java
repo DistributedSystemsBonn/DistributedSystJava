@@ -5,12 +5,31 @@ import org.apache.xmlrpc.webserver.WebServer;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 public class AnotherMain {
     public static void main(String[] args) throws Exception {
-        // 25.83.73.160 - Alex
-        // 25.95.123.198 - Maxim
-        Node node = new Node("25.83.73.160:9177");
+        String HamachiIpPort = null;
+        Enumeration e = NetworkInterface.getNetworkInterfaces();
+        while(e.hasMoreElements()) {
+            NetworkInterface n = (NetworkInterface) e.nextElement();
+            if (n.getDisplayName().equals("LogMeIn Hamachi Virtual Ethernet Adapter")) {
+                Enumeration ee = n.getInetAddresses();
+                if (!ee.hasMoreElements()) {
+                    throw new Exception("Smth wrong with Enumeration ee = n.getInetAddresses()");
+                }
+                InetAddress i = (InetAddress) ee.nextElement();
+                HamachiIpPort = i.getHostAddress();
+            }
+        }
+
+        HamachiIpPort += ":" + "9177";
+        System.out.println("ip:port - " + HamachiIpPort);
+        Node node = new Node(HamachiIpPort);
         PdsServiceImpl.setNode(node);
 
         new Thread() {
@@ -20,7 +39,7 @@ public class AnotherMain {
                     XmlRpcServer xmlRpcServer = webServer.getXmlRpcServer();
                     PropertyHandlerMapping phm = new PropertyHandlerMapping();
                     phm.setVoidMethodEnabled(true);
-                    phm.addHandler(Host.class.getName(), PdsServiceImpl.class);
+                    phm.addHandler("Host", PdsServiceImpl.class);
                     xmlRpcServer.setHandlerMapping(phm);
 
                     XmlRpcServerConfigImpl serverConfig = (XmlRpcServerConfigImpl)
