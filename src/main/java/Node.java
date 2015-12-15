@@ -15,6 +15,8 @@ public class Node {
 
     private List<NodeInfo> dictionary;
 
+    private ClientFactoryPDS clientFactoryPDS;
+
     public Node(String ip) {
         self = new NodeInfo();
         self.setId(UUID.randomUUID());
@@ -25,33 +27,15 @@ public class Node {
         // join
         // sign off
         // start
+
+        clientFactoryPDS = new ClientFactoryPDS();
     }
 
     public List<NodeInfo> join(String ipPort) {
         // запрос
         List<NodeInfo> receivedDictionary;
         try {
-/*            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-            config.setServerURL(new URL(ipPort));
-
-            XmlRpcClient client = new XmlRpcClient();
-            client.setConfig(config);
-
-            // handleJoin прибавляет к своему dictionary полученный.
-            // handleJoin рассылает словарь всей известной сети (и сторой, и новой).
-            // данные
-            receivedDictionary = (List<NodeInfo>) client.execute("Calculator.handleJoin", dictionary);*/
-
-            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-            config.setServerURL(new URL("http://" + ipPort + "/xmlrpc"));
-            config.setEnabledForExtensions(true);
-            config.setConnectionTimeout(60 * 1000);
-            config.setReplyTimeout(60 * 1000);
-            XmlRpcClient client = new XmlRpcClient();
-            client.setConfig(config);
-            ClientFactory factory = new ClientFactory(client);
-            Host pds = (Host) factory.newInstance(Host.class);
-
+            Host pds = clientFactoryPDS.getClient(ipPort);
             Object[] ipPorts = pds.getHosts(self.getIp());
 
             NodeInfo nodeInfo = new NodeInfo();
@@ -63,16 +47,7 @@ public class Node {
                 nodeInfo.setIp((String) s);
                 dictionary.add(nodeInfo);
 
-                config = new XmlRpcClientConfigImpl();
-                config.setServerURL(new URL("http://" + nodeInfo.getIp() + "/xmlrpc"));
-                config.setEnabledForExtensions(true);
-                config.setConnectionTimeout(60 * 1000);
-                config.setReplyTimeout(60 * 1000);
-                client = new XmlRpcClient();
-                client.setConfig(config);
-                factory = new ClientFactory(client);
-                pds = (Host) factory.newInstance(Host.class);
-
+                pds = clientFactoryPDS.getClient(nodeInfo.getIp());
                 pds.addNewHost(self.getIp());
             }
 
