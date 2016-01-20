@@ -22,65 +22,35 @@ public class Node {
         self.setIp(ip);
         masterNode = new NodeInfo();
         dictionary = new ArrayList<NodeInfo>();
-        // Принимает
-        // join
-        // sign off
-        // start
-
         clientFactoryPDS = new ClientFactoryPDS();
     }
 
     public List<NodeInfo> join(String ipPort) {
-        // запрос
-        try {
-            Host pds = clientFactoryPDS.getClient(ipPort);
-            Object[] IpIdPorts = pds.getHosts(self.getIp(), self.getId());
+            try {
+                Host pds = clientFactoryPDS.getClient(ipPort);
+                Object[] ipPorts = pds.getHosts(self.getIp());
 
-            Object interimNodeInfo[];
-            NodeInfo nodeInfo;
-
-            for (int i = 0; i < IpIdPorts.length; i++) {
-                nodeInfo = new NodeInfo();
-                interimNodeInfo = (Object[]) IpIdPorts[i];
-                nodeInfo.setIp((String) interimNodeInfo[0]);
-                nodeInfo.setId((UUID) interimNodeInfo[1]);
+                NodeInfo nodeInfo = new NodeInfo();
+                nodeInfo.setIp(ipPort);
                 dictionary.add(nodeInfo);
-                if (i > 0) {
+
+                for (Object s : ipPorts) {
+                    nodeInfo = new NodeInfo();
+                    nodeInfo.setIp((String) s);
+                    dictionary.add(nodeInfo);
+
                     pds = clientFactoryPDS.getClient(nodeInfo.getIp());
-                    pds.addNewHost(self.getIp(), self.getId());
+                    pds.addNewHost(self.getIp());
                 }
+
+            } catch (Exception ex) {
+                System.out.println(ex);
             }
             System.out.println("joined to " + ipPort);
-            // System.out.println(pds.echo("Hello"));
-
-        } catch (Exception ex) {
-            //System.out.println(ex);
-            System.out.println("error -- ip is not valid");
-
-        }
-
-/*
-        for (NodeInfo nodeInfo : receivedDictionary) {
-            if (nodeInfo.getIp().equals(self.getIp())) {
-                receivedDictionary.remove(nodeInfo);
-                break;
-            }
-        }*/
-/*
-        NodeInfo o = new NodeInfo();
-        for (NodeInfo nodeInfo : receivedDictionary) {
-            if (nodeInfo.getIp().equals(self.getIp())) {
-                o = nodeInfo;
-                break;
-            }
-        }
-        receivedDictionary.remove(o);*/
-
         return dictionary;
     }
 
     public void signOff() {
-        // от всех
         try {
             for (int i = 0; i < dictionary.size(); i++) {
                 Host pds = clientFactoryPDS.getClient(dictionary.get(i).getIp());
@@ -118,11 +88,7 @@ public class Node {
                         if (nodeInfo.getId().equals(nodeIDsArray[i])) {
                             try {
                                 Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
-                                Date t = new Date();
-                                System.out.println(t.getTime() + " connecting to " + nodeInfo.getIp());
                                 if (pds.isAlive().equals("Ok")) {
-                                    t = new Date();
-                                    System.out.println(t.getTime() + " " + nodeInfo.getIp() + " says Ok");
                                     isMaster = false;
                                 }
                             } catch (Exception ex) {
@@ -218,6 +184,7 @@ public class Node {
 
         return ipPorts;
     }
+
     public UUID[] getIds() {
         UUID[] ids = new UUID[dictionary.size()];
 

@@ -9,31 +9,16 @@ public class PdsServiceImpl {
         node = _node;
     }
 
-    public Object[] getHosts(String ipPort, UUID newId) {
-        //String[] ipPorts = node.getIpPorts();
-        //UUID[] ids = node.getIds();
-
-        Object[] backInfo = new Object[node.getDictionary().size()+1];
-        Object[] interimNodeInfo = new Object[2];
-        interimNodeInfo[0] = node.getSelf().getIp();
-        interimNodeInfo[1] = node.getSelf().getId();
-        backInfo[0] = interimNodeInfo;
-
-        for (int i = 0; i < node.getDictionary().size(); i++) {
-            interimNodeInfo = new Object[2];
-            interimNodeInfo[0] = node.getDictionary().get(i).getIp();
-            interimNodeInfo[1] = node.getDictionary().get(i).getId();
-            backInfo[i+1] = interimNodeInfo;
-        }
+    public Object[] getHosts(String ipAndPort) {
+        String[] ipPorts = node.getIpPorts();
 
         NodeInfo newNode = new NodeInfo();
-        newNode.setIp(ipPort);
-        newNode.setId(newId);
+        newNode.setIp(ipAndPort);
         node.getDictionary().add(newNode);
 
-        System.out.println("joining request from " + ipPort);
+        System.out.println("joining request from " + ipAndPort);
 
-        return backInfo;
+        return ipPorts;
     }
 
     public String echo() {
@@ -43,10 +28,9 @@ public class PdsServiceImpl {
         return response;
     }
 
-    public void addNewHost(String ipAndPort, UUID id) {
+    public void addNewHost(String ipAndPort) {
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.setIp(ipAndPort);
-        nodeInfo.setId(id);
         node.getDictionary().add(nodeInfo);
     }
 
