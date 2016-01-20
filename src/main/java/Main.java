@@ -29,7 +29,8 @@ public class Main {
             }
         }
 
-        HamachiIpPort += ":" + "9178";
+        HamachiIpPort = "25.124.17.178:9178";
+      //  HamachiIpPort += ":" + "9178";
         //HamachiIpPort = "25.95.123.198:9178";
         System.out.println("ip:port - " + HamachiIpPort);
         Node node = new Node(HamachiIpPort);
@@ -75,7 +76,7 @@ public class Main {
             if (input.equals("exit")) {
                 System.exit(0);
 
-            } else if (input.substring(0, 4).equals("join")) {
+            } else if (input.length() >= 4 && input.substring(0, 4).equals("join")) {
                 System.out.println("joining...");
                 int flg = 1;
                 for (int i = 0; i < node.getDictionary().size(); i++) {
