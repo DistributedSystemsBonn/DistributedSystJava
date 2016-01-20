@@ -64,7 +64,7 @@ public class PdsServiceImpl {
         System.out.println(DelIpPort + " was signed off");
     }
 
-    public String IsAlive () {
+    public String isAlive () {
         node.start();
         String response = "Ok";
         return response;
