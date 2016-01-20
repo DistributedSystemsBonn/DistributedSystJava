@@ -36,12 +36,11 @@ public class Node {
             Host pds = clientFactoryPDS.getClient(ipPort);
             Object[] IpIdPorts = pds.getHosts(self.getIp(), self.getId());
 
-            Object interimNodeInfo[] = new Object[2];
-            NodeInfo nodeInfo = new NodeInfo();
+            Object interimNodeInfo[];
+            NodeInfo nodeInfo;
 
             for (int i = 0; i < IpIdPorts.length; i++) {
                 nodeInfo = new NodeInfo();
-                interimNodeInfo = new Object[2];
                 interimNodeInfo = (Object[]) IpIdPorts[i];
                 nodeInfo.setIp((String) interimNodeInfo[0]);
                 nodeInfo.setId((UUID) interimNodeInfo[1]);
