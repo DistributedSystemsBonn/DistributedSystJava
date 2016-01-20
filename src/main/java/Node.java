@@ -1,8 +1,7 @@
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
@@ -15,71 +14,50 @@ public class Node {
 
     private List<NodeInfo> dictionary;
 
+    private ClientFactoryPDS clientFactoryPDS;
+
     public Node(String ip) {
         self = new NodeInfo();
         self.setId(UUID.randomUUID());
         self.setIp(ip);
-
+        masterNode = new NodeInfo();
         dictionary = new ArrayList<NodeInfo>();
         // Принимает
         // join
         // sign off
         // start
+
+        clientFactoryPDS = new ClientFactoryPDS();
     }
 
     public List<NodeInfo> join(String ipPort) {
         // запрос
-        List<NodeInfo> receivedDictionary;
         try {
-/*            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-            config.setServerURL(new URL(ipPort));
+            Host pds = clientFactoryPDS.getClient(ipPort);
+            Object[] IpIdPorts = pds.getHosts(self.getIp(), self.getId());
 
-            XmlRpcClient client = new XmlRpcClient();
-            client.setConfig(config);
-
-            // handleJoin прибавляет к своему dictionary полученный.
-            // handleJoin рассылает словарь всей известной сети (и сторой, и новой).
-            // данные
-            receivedDictionary = (List<NodeInfo>) client.execute("Calculator.handleJoin", dictionary);*/
-
-            XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
-            config.setServerURL(new URL("http://" + ipPort + "/xmlrpc"));
-            config.setEnabledForExtensions(true);
-            config.setConnectionTimeout(60 * 1000);
-            config.setReplyTimeout(60 * 1000);
-            XmlRpcClient client = new XmlRpcClient();
-            client.setConfig(config);
-            ClientFactory factory = new ClientFactory(client);
-            Host pds = (Host) factory.newInstance(Host.class);
-
-            Object[] ipPorts = pds.getHosts(self.getIp());
-
+            Object interimNodeInfo[] = new Object[2];
             NodeInfo nodeInfo = new NodeInfo();
-            nodeInfo.setIp(ipPort);
-            dictionary.add(nodeInfo);
 
-            for (Object s : ipPorts) {
+            for (int i = 0; i < IpIdPorts.length; i++) {
                 nodeInfo = new NodeInfo();
-                nodeInfo.setIp((String) s);
+                interimNodeInfo = new Object[2];
+                interimNodeInfo = (Object[]) IpIdPorts[i];
+                nodeInfo.setIp((String) interimNodeInfo[0]);
+                nodeInfo.setId((UUID) interimNodeInfo[1]);
                 dictionary.add(nodeInfo);
-
-                config = new XmlRpcClientConfigImpl();
-                config.setServerURL(new URL("http://" + nodeInfo.getIp() + "/xmlrpc"));
-                config.setEnabledForExtensions(true);
-                config.setConnectionTimeout(60 * 1000);
-                config.setReplyTimeout(60 * 1000);
-                client = new XmlRpcClient();
-                client.setConfig(config);
-                factory = new ClientFactory(client);
-                pds = (Host) factory.newInstance(Host.class);
-
-                pds.addNewHost(self.getIp());
+                if (i > 0) {
+                    pds = clientFactoryPDS.getClient(nodeInfo.getIp());
+                    pds.addNewHost(self.getIp(), self.getId());
+                }
             }
-
-           // System.out.println(pds.echo("Hello"));
+            System.out.println("joined to " + ipPort);
+            // System.out.println(pds.echo("Hello"));
 
         } catch (Exception ex) {
-            System.out.println(ex);
+            //System.out.println(ex);
+            System.out.println("error -- ip is not valid");
+
         }
 
 /*
@@ -104,29 +82,108 @@ public class Node {
 
     public void signOff() {
         // от всех
+        try {
+            for (int i = 0; i < dictionary.size(); i++) {
+                Host pds = clientFactoryPDS.getClient(dictionary.get(i).getIp());
+                pds.DelHost(self.getIp());
+            }
+            dictionary.clear();
+        } catch (Exception ex) {
+            System.out.println(ex);
+        }
     }
 
     public void start() {
-
+        System.out.println("master node election...");
+        NodeInfo MasterNode;
+        MasterNode = electMasterNode();
     }
 
     protected NodeInfo electMasterNode() {
         List<UUID> nodeIDs = new ArrayList<UUID>();
         for (NodeInfo nodeInfo : dictionary) {
-            nodeIDs.add(nodeInfo.getId());
-        }
-
-        UUID[] nodeIDsArray = (UUID[]) nodeIDs.toArray();
-        Arrays.sort(nodeIDsArray);
-        UUID masterNodeId = nodeIDsArray[nodeIDsArray.length - 1];
-        for (NodeInfo nodeInfo : dictionary) {
-            if (nodeInfo.getId().equals(masterNodeId)) {
-                masterNode = nodeInfo;
-                break;
+            if (getSelf().getId().compareTo(nodeInfo.getId()) == -1) {
+                nodeIDs.add(nodeInfo.getId());
             }
         }
-
+        UUID[] nodeIDsArray = new UUID[nodeIDs.size()];
+        nodeIDs.toArray(nodeIDsArray);
+        Arrays.sort(nodeIDsArray);
+        boolean isMaster = true;
+        Calendar calendar = Calendar.getInstance();
+        java.util.Date now = calendar.getTime();
+        if (nodeIDsArray.length != 0) {
+            while (masterNode.getIp() == null) {
+                for (int i = nodeIDsArray.length - 1; i >= 0; i--) {
+                    for (NodeInfo nodeInfo : dictionary) {
+                        if (nodeInfo.getId().equals(nodeIDsArray[i])) {
+                            try {
+                                Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
+                                Date t = new Date();
+                                System.out.println(t.getTime() + " connecting to " + nodeInfo.getIp());
+                                if (pds.isAlive().equals("Ok")) {
+                                    t = new Date();
+                                    System.out.println(t.getTime() + " " + nodeInfo.getIp() + " says Ok");
+                                    isMaster = false;
+                                }
+                            } catch (Exception ex) {
+                                System.out.println(ex);
+                            }
+                        }
+                    }
+                }
+                if (isMaster) {
+                    masterNode = getSelf();
+                    System.out.println("master node is " + masterNode.getIp());
+                    for (NodeInfo node: dictionary) {
+                        Host pds = clientFactoryPDS.getClient(node.getIp());
+                        pds.masterMessage(self.getIp(), self.getId());
+                    }
+                    break;
+                }
+            }
+            try {
+                Thread.sleep(1000);                 //1000 milliseconds is one second.
+            } catch(InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        } else {
+            masterNode = getSelf();
+            System.out.println("master node is " + masterNode.getIp());
+            for (NodeInfo node: dictionary) {
+                try {
+                    Host pds = clientFactoryPDS.getClient(node.getIp());
+                    pds.masterMessage(self.getIp(), self.getId());
+                } catch (Exception ex) {
+                    System.out.println(ex);
+                }
+            }
+        }
         return masterNode;
+    }
+
+    public void CME() {
+        System.out.println("Centralised Mutual Exclusion used for connecting to " + getMasterNode().getIp());
+        for (NodeInfo node: dictionary) {
+            try {
+                Host pds = clientFactoryPDS.getClient(node.getIp());
+                pds.loop();
+            } catch (Exception ex) {
+                System.out.println(ex);
+            }
+        }
+    }
+
+    public void tram(){
+        try {
+            Host pds = clientFactoryPDS.getClient(getMasterNode().getIp());
+            Boolean isAccess;
+            String masterStr = pds.getString();
+            masterStr += self.getIp();
+            pds = clientFactoryPDS.getClient(getMasterNode().getIp());
+        } catch (Exception ex) {
+            System.out.println(ex);
+        }
     }
 
     public NodeInfo getSelf() {
@@ -135,6 +192,14 @@ public class Node {
 
     public void setSelf(NodeInfo self) {
         this.self = self;
+    }
+
+    public NodeInfo getMasterNode() {
+        return masterNode;
+    }
+
+    public void setMasterNode(NodeInfo masterNode) {
+        this.masterNode = masterNode;
     }
 
     public void setDictionary(List<NodeInfo> dictionary) {
@@ -153,5 +218,14 @@ public class Node {
         }
 
         return ipPorts;
+    }
+    public UUID[] getIds() {
+        UUID[] ids = new UUID[dictionary.size()];
+
+        for (int i = 0; i < dictionary.size(); i++) {
+            ids[i] = dictionary.get(i).getId();
+        }
+
+        return ids;
     }
 }
