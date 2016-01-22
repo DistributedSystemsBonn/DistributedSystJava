@@ -54,10 +54,9 @@ public class PdsServiceImpl {
         return response;
     }
 
-    public void masterMessage(String ipPort, UUID id) {
+    public void masterMessage(String ipPort) {
         NodeInfo masterNodeInfo = new NodeInfo();
         masterNodeInfo.setIp(ipPort);
-        masterNodeInfo.setId(id);
         node.setMasterNode(masterNodeInfo);
         System.out.println("master node is " + masterNodeInfo.getIp());
     }

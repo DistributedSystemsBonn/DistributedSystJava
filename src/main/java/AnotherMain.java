@@ -93,12 +93,8 @@ public class AnotherMain {
                 }
             } else if (input.equals("gethosts")) {
                 String[] ipPorts = node.getIpPorts();
-                UUID[] ids = node.getIds();
                 for (String ipPort : ipPorts) {
                     System.out.println(ipPort);
-                }
-                for (UUID id : ids) {
-                    System.out.println(id);
                 }
             } else if (input.equals("sign off")) {
                 node.signOff();
