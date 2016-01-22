@@ -15,7 +15,7 @@ public class NodeInfo {
     }
 
     public void initId(String ip, int port) {
-        String[] parts = ip.split(".");
+        String[] parts = ip.split("\\.");
         String id = "";
 
         for (String part : parts) id += part;
