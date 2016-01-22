@@ -29,8 +29,8 @@ public class AnotherMain {
             }
         }
 
-        HamachiIpPort += ":" + "9177";
-        //HamachiIpPort = "25.95.123.198:9177";
+        HamachiIpPort = "25.124.17.178:9177";
+        //HamachiIpPort += ":" + "9177";
         System.out.println("ip:port - " + HamachiIpPort);
         Node node = new Node(HamachiIpPort);
         PdsServiceImpl.setNode(node);
@@ -75,7 +75,7 @@ public class AnotherMain {
             if (input.equals("exit")) {
                 System.exit(0);
 
-            } else if (input.substring(0, 4).equals("join")) {
+            } else if (input.length() >= 4 && input.substring(0, 4).equals("join")) {
                 System.out.println("joining...");
                 int flg = 1;
                 for (int i = 0; i < node.getDictionary().size(); i++) {
@@ -93,12 +93,8 @@ public class AnotherMain {
                 }
             } else if (input.equals("gethosts")) {
                 String[] ipPorts = node.getIpPorts();
-                UUID[] ids = node.getIds();
                 for (String ipPort : ipPorts) {
                     System.out.println(ipPort);
-                }
-                for (UUID id : ids) {
-                    System.out.println(id);
                 }
             } else if (input.equals("sign off")) {
                 node.signOff();

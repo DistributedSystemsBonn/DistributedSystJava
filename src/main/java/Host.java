@@ -12,4 +12,8 @@ public interface Host {
     public void masterMessage(String ipPort, UUID id);
     public void loop();
     public String getString();
+
+    void getStartMsg(boolean isRicartAlgorithm);
+    boolean receiveElectionMsg(String id);
+    void setMasterNode(String ipAndPort);
 }

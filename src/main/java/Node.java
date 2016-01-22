@@ -18,7 +18,6 @@ public class Node {
 
     public Node(String ip) {
         self = new NodeInfo();
-        self.setId(UUID.randomUUID());
         self.setIp(ip);
         masterNode = new NodeInfo();
         dictionary = new ArrayList<NodeInfo>();
@@ -63,9 +62,9 @@ public class Node {
     public void start() {
         System.out.println("master node election...");
         NodeInfo MasterNode;
-        MasterNode = electMasterNode();
+        //MasterNode = electMasterNode();
     }
-
+/*
     protected NodeInfo electMasterNode() {
         List<UUID> nodeIDs = new ArrayList<UUID>();
         for (NodeInfo nodeInfo : dictionary) {
@@ -124,7 +123,7 @@ public class Node {
         }
         return masterNode;
     }
-
+*/
     public void CME() {
         System.out.println("Centralised Mutual Exclusion used for connecting to " + getMasterNode().getIp());
         for (NodeInfo node : dictionary) {
@@ -181,16 +180,6 @@ public class Node {
         }
 
         return ipPorts;
-    }
-
-    public UUID[] getIds() {
-        UUID[] ids = new UUID[dictionary.size()];
-
-        for (int i = 0; i < dictionary.size(); i++) {
-            ids[i] = dictionary.get(i).getId();
-        }
-
-        return ids;
     }
 }
 
