@@ -10,7 +10,7 @@ import org.apache.xmlrpc.client.util.ClientFactory;
 public class Node {
     private NodeInfo self;
 
-    private NodeInfo masterNode;
+    private String masterNode;
 
     private List<NodeInfo> dictionary;
 
@@ -19,7 +19,6 @@ public class Node {
     public Node(String ip) {
         self = new NodeInfo();
         self.setIp(ip);
-        masterNode = new NodeInfo();
         dictionary = new ArrayList<NodeInfo>();
         clientFactoryPDS = new ClientFactoryPDS();
     }
@@ -126,7 +125,7 @@ public class Node {
         }
     */
     public void CME() {
-        System.out.println("Centralised Mutual Exclusion used for connecting to " + getMasterNode().getIp());
+        System.out.println("Centralised Mutual Exclusion used for connecting to " + getMasterNode());
         for (NodeInfo node : dictionary) {
             try {
                 Host pds = clientFactoryPDS.getClient(node.getIp());
@@ -139,11 +138,11 @@ public class Node {
 
     public void tram() {
         try {
-            Host pds = clientFactoryPDS.getClient(getMasterNode().getIp());
+            Host pds = clientFactoryPDS.getClient(getMasterNode());
             Boolean isAccess;
             String masterStr = pds.getString();
             masterStr += self.getIp();
-            pds = clientFactoryPDS.getClient(getMasterNode().getIp());
+            pds = clientFactoryPDS.getClient(getMasterNode());
         } catch (Exception ex) {
             System.out.println(ex);
         }
@@ -157,11 +156,11 @@ public class Node {
         this.self = self;
     }
 
-    public NodeInfo getMasterNode() {
+    public String getMasterNode() {
         return masterNode;
     }
 
-    public void setMasterNode(NodeInfo masterNode) {
+    public void setMasterNode(String masterNode) {
         this.masterNode = masterNode;
     }
 
