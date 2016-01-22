@@ -10,6 +10,8 @@ public class NodeInfo {
 
     public void setIp(String ip) {
         this.ip = ip;
+        String[] parts = ip.split(":");
+        this.initId(parts[0], Integer.parseInt(parts[1]));
     }
 
     public void initId(String ip, int port) {
