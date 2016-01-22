@@ -26,27 +26,25 @@ public class Node {
     }
 
     public List<NodeInfo> join(String ipPort) {
-            try {
-                Host pds = clientFactoryPDS.getClient(ipPort);
-                Object[] ipPorts = pds.getHosts(self.getIp());
+        try {
+            Host pds = clientFactoryPDS.getClient(ipPort);
+            Object[] ipPorts = pds.getHosts(self.getIp());
 
-                NodeInfo nodeInfo = new NodeInfo();
-                nodeInfo.setIp(ipPort);
+            NodeInfo nodeInfo = new NodeInfo();
+            nodeInfo.setIp(ipPort);
+            dictionary.add(nodeInfo);
+
+            for (Object s : ipPorts) {
+                nodeInfo = new NodeInfo();
+                nodeInfo.setIp((String) s);
                 dictionary.add(nodeInfo);
-
-                for (Object s : ipPorts) {
-                    nodeInfo = new NodeInfo();
-                    nodeInfo.setIp((String) s);
-                    dictionary.add(nodeInfo);
-
-                    pds = clientFactoryPDS.getClient(nodeInfo.getIp());
-                    pds.addNewHost(self.getIp());
-                }
-
-            } catch (Exception ex) {
-                System.out.println(ex);
+                pds = clientFactoryPDS.getClient(nodeInfo.getIp());
+                pds.addNewHost(self.getIp());
             }
-            System.out.println("joined to " + ipPort);
+        } catch (Exception ex) {
+            System.out.println(ex);
+        }
+        System.out.println("joined to " + ipPort);
         return dictionary;
     }
 
@@ -100,7 +98,7 @@ public class Node {
                 if (isMaster) {
                     masterNode = getSelf();
                     System.out.println("master node is " + masterNode.getIp());
-                    for (NodeInfo node: dictionary) {
+                    for (NodeInfo node : dictionary) {
                         Host pds = clientFactoryPDS.getClient(node.getIp());
                         pds.masterMessage(self.getIp(), self.getId());
                     }
@@ -109,13 +107,13 @@ public class Node {
             }
             try {
                 Thread.sleep(1000);                 //1000 milliseconds is one second.
-            } catch(InterruptedException ex) {
+            } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
         } else {
             masterNode = getSelf();
             System.out.println("master node is " + masterNode.getIp());
-            for (NodeInfo node: dictionary) {
+            for (NodeInfo node : dictionary) {
                 try {
                     Host pds = clientFactoryPDS.getClient(node.getIp());
                     pds.masterMessage(self.getIp(), self.getId());
@@ -129,7 +127,7 @@ public class Node {
 
     public void CME() {
         System.out.println("Centralised Mutual Exclusion used for connecting to " + getMasterNode().getIp());
-        for (NodeInfo node: dictionary) {
+        for (NodeInfo node : dictionary) {
             try {
                 Host pds = clientFactoryPDS.getClient(node.getIp());
                 pds.loop();
@@ -139,7 +137,7 @@ public class Node {
         }
     }
 
-    public void tram(){
+    public void tram() {
         try {
             Host pds = clientFactoryPDS.getClient(getMasterNode().getIp());
             Boolean isAccess;
@@ -193,5 +191,35 @@ public class Node {
         }
 
         return ids;
+    }
+}
+
+
+public void startBullyElection() {
+    // Creating an array of IDs that are bigger then this one
+    List<Integer> nodeIDs = new ArrayList<Integer>();
+    for (NodeInfo nodeInfo : dictionary) {
+        if (getSelf().getId().compareTo(nodeInfo.getId()) == -1) {
+            nodeIDs.add(nodeInfo.getId());
+        }
+    }
+    if (nodeIDs.size() != 0){
+        Integer[] nodeIDsArray = new Integer[nodeIDs.size()];
+        nodeIDs.toArray(nodeIDsArray);
+        Arrays.sort(nodeIDsArray);
+        // end of creating
+        sendElectionMsg();
+
+    } else {
+        // This is masterNode
+    }
+}
+
+public void sendElectionMsg() {
+    Host pds = clientFactoryPDS.getClient(ipPort); // call proxy.ReceiveElectionMsg() method of target host.
+    boolean msg = false;
+    msg = pds.ReceiveElectionMsg()(self.getIp()); // the receiver starts "election algorithm" thread and return true;
+    if (msg) {
+        boolean _isThisNodeLost = true; // WHAT??
     }
 }

@@ -10,7 +10,8 @@ public class PdsServiceImpl {
     }
 
     public Object[] getHosts(String ipAndPort) {
-        String[] ipPorts = node.getIpPorts();
+        //String[] ipPorts = node.getIpPorts();
+        Object[] ipPorts = node.getIpPorts();
 
         NodeInfo newNode = new NodeInfo();
         newNode.setIp(ipAndPort);
