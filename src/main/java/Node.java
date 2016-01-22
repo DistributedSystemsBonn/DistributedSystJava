@@ -64,66 +64,67 @@ public class Node {
         NodeInfo MasterNode;
         //MasterNode = electMasterNode();
     }
-/*
-    protected NodeInfo electMasterNode() {
-        List<UUID> nodeIDs = new ArrayList<UUID>();
-        for (NodeInfo nodeInfo : dictionary) {
-            if (getSelf().getId().compareTo(nodeInfo.getId()) == -1) {
-                nodeIDs.add(nodeInfo.getId());
+
+    /*
+        protected NodeInfo electMasterNode() {
+            List<UUID> nodeIDs = new ArrayList<UUID>();
+            for (NodeInfo nodeInfo : dictionary) {
+                if (getSelf().getId().compareTo(nodeInfo.getId()) == -1) {
+                    nodeIDs.add(nodeInfo.getId());
+                }
             }
-        }
-        UUID[] nodeIDsArray = new UUID[nodeIDs.size()];
-        nodeIDs.toArray(nodeIDsArray);
-        Arrays.sort(nodeIDsArray);
-        boolean isMaster = true;
-        Calendar calendar = Calendar.getInstance();
-        java.util.Date now = calendar.getTime();
-        if (nodeIDsArray.length != 0) {
-            while (masterNode.getIp() == null) {
-                for (int i = nodeIDsArray.length - 1; i >= 0; i--) {
-                    for (NodeInfo nodeInfo : dictionary) {
-                        if (nodeInfo.getId().equals(nodeIDsArray[i])) {
-                            try {
-                                Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
-                                if (pds.isAlive().equals("Ok")) {
-                                    isMaster = false;
+            UUID[] nodeIDsArray = new UUID[nodeIDs.size()];
+            nodeIDs.toArray(nodeIDsArray);
+            Arrays.sort(nodeIDsArray);
+            boolean isMaster = true;
+            Calendar calendar = Calendar.getInstance();
+            java.util.Date now = calendar.getTime();
+            if (nodeIDsArray.length != 0) {
+                while (masterNode.getIp() == null) {
+                    for (int i = nodeIDsArray.length - 1; i >= 0; i--) {
+                        for (NodeInfo nodeInfo : dictionary) {
+                            if (nodeInfo.getId().equals(nodeIDsArray[i])) {
+                                try {
+                                    Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
+                                    if (pds.isAlive().equals("Ok")) {
+                                        isMaster = false;
+                                    }
+                                } catch (Exception ex) {
+                                    System.out.println(ex);
                                 }
-                            } catch (Exception ex) {
-                                System.out.println(ex);
                             }
                         }
                     }
+                    if (isMaster) {
+                        masterNode = getSelf();
+                        System.out.println("master node is " + masterNode.getIp());
+                        for (NodeInfo node : dictionary) {
+                            Host pds = clientFactoryPDS.getClient(node.getIp());
+                            pds.masterMessage(self.getIp(), self.getId());
+                        }
+                        break;
+                    }
                 }
-                if (isMaster) {
-                    masterNode = getSelf();
-                    System.out.println("master node is " + masterNode.getIp());
-                    for (NodeInfo node : dictionary) {
+                try {
+                    Thread.sleep(1000);                 //1000 milliseconds is one second.
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                masterNode = getSelf();
+                System.out.println("master node is " + masterNode.getIp());
+                for (NodeInfo node : dictionary) {
+                    try {
                         Host pds = clientFactoryPDS.getClient(node.getIp());
                         pds.masterMessage(self.getIp(), self.getId());
+                    } catch (Exception ex) {
+                        System.out.println(ex);
                     }
-                    break;
                 }
             }
-            try {
-                Thread.sleep(1000);                 //1000 milliseconds is one second.
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-        } else {
-            masterNode = getSelf();
-            System.out.println("master node is " + masterNode.getIp());
-            for (NodeInfo node : dictionary) {
-                try {
-                    Host pds = clientFactoryPDS.getClient(node.getIp());
-                    pds.masterMessage(self.getIp(), self.getId());
-                } catch (Exception ex) {
-                    System.out.println(ex);
-                }
-            }
+            return masterNode;
         }
-        return masterNode;
-    }
-*/
+    */
     public void CME() {
         System.out.println("Centralised Mutual Exclusion used for connecting to " + getMasterNode().getIp());
         for (NodeInfo node : dictionary) {
@@ -181,34 +182,46 @@ public class Node {
 
         return ipPorts;
     }
-}
 
 
-public void startBullyElection() {
-    // Creating an array of IDs that are bigger then this one
-    List<Integer> nodeIDs = new ArrayList<Integer>();
-    for (NodeInfo nodeInfo : dictionary) {
-        if (getSelf().getId().compareTo(nodeInfo.getId()) == -1) {
-            nodeIDs.add(nodeInfo.getId());
+    public void startBullyElection() {
+        // Creating an array of IDs that are bigger then this one
+        List<String> nodeIDs = new ArrayList<String>();
+        for (NodeInfo nodeInfo : dictionary) {
+            if (getSelf().getId().compareTo(nodeInfo.getId()) == -1) {
+                nodeIDs.add(nodeInfo.getId());
+            }
+        }
+        if (nodeIDs.size() != 0) {
+            String[] nodeIDsArray = new String[nodeIDs.size()];
+            nodeIDs.toArray(nodeIDsArray);
+            Arrays.sort(nodeIDsArray);
+            // end of creating
+            boolean flag = false;
+            boolean msg;
+            for (String ipPort : nodeIDsArray) {
+                msg = sendElectionMsg(ipPort);
+                try {
+                    Thread.sleep(1000);                 //1000 milliseconds is one second.
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+                flag |= msg;
+            }
+            if (!flag) {
+                boolean _isElectionFinished = true;
+                // This is masterNode (send others )
+            }
+        } else {
+            boolean _isElectionFinished = true;
+            // This is masterNode (send others )
         }
     }
-    if (nodeIDs.size() != 0){
-        Integer[] nodeIDsArray = new Integer[nodeIDs.size()];
-        nodeIDs.toArray(nodeIDsArray);
-        Arrays.sort(nodeIDsArray);
-        // end of creating
-        sendElectionMsg();
 
-    } else {
-        // This is masterNode
-    }
-}
-
-public void sendElectionMsg() {
-    Host pds = clientFactoryPDS.getClient(ipPort); // call proxy.ReceiveElectionMsg() method of target host.
-    boolean msg = false;
-    msg = pds.ReceiveElectionMsg()(self.getIp()); // the receiver starts "election algorithm" thread and return true;
-    if (msg) {
-        boolean _isThisNodeLost = true; // WHAT??
+    public boolean sendElectionMsg(String ipPort) {
+        Host pds = clientFactoryPDS.getClient(ipPort); // call proxy.ReceiveElectionMsg() method of target host.
+        boolean msg = false;
+        msg = pds.receiveElectionMsg(self.getIp()); // the receiver starts "election algorithm" thread and return true;
+        return msg;
     }
 }

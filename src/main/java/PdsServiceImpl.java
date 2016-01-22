@@ -42,14 +42,14 @@ public class PdsServiceImpl {
             if (ipPort.equals(DelIpPort)) {
                 break;
             }
-            DelIpIndex=DelIpIndex+1;
+            DelIpIndex = DelIpIndex + 1;
         }
         node.getDictionary().remove(DelIpIndex);
 
         System.out.println(DelIpPort + " was signed off");
     }
 
-    public String isAlive () {
+    public String isAlive() {
         node.start();
         String response = "Ok";
         return response;
@@ -65,7 +65,7 @@ public class PdsServiceImpl {
     public void loop() {
         try {
             Thread.sleep(1000);                 //1000 milliseconds is one second.
-        } catch(InterruptedException ex) {
+        } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
         node.tram();
@@ -74,5 +74,10 @@ public class PdsServiceImpl {
     public String getString() {
         String masterStr = "wwwww";
         return masterStr;
+    }
+
+    public boolean receiveElectionMsg(String Ip) {
+        node.startBullyElection();
+        return true;
     }
 }

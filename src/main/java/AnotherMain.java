@@ -29,8 +29,8 @@ public class AnotherMain {
             }
         }
 
-        HamachiIpPort = "25.124.17.178:9177";
-        //HamachiIpPort += ":" + "9177";
+        //HamachiIpPort = "25.124.17.178:9177";
+        HamachiIpPort += ":" + "9177";
         System.out.println("ip:port - " + HamachiIpPort);
         Node node = new Node(HamachiIpPort);
         PdsServiceImpl.setNode(node);

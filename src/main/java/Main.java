@@ -102,7 +102,7 @@ public class Main {
                 System.out.println("signed off the network");
             } else if (input.equals("start")) {
                 if (node.getDictionary().size() > 0) {
-                    node.start();
+                    node.startBullyElection();
                     System.out.println("Select an algorithm:");
                     System.out.println(" - CME alg (Centralised Mutual Exclusion)");
                     System.out.println(" - RA alg (Ricart & Agrawala)");
