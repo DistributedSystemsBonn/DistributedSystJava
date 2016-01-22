@@ -81,3 +81,7 @@ public class PdsServiceImpl {
         return true;
     }
 }
+
+    public void setMasterNode(String ipAndPort) {
+        node.setMasterNode(ipAndPort);
+    }

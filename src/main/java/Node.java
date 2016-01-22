@@ -202,6 +202,7 @@ public class Node {
                 nodeIDs.add(nodeInfo.getId());
             }
         }
+        boolean _isElectionFinished = false;
         if (nodeIDs.size() != 0) {
             String[] nodeIDsArray = new String[nodeIDs.size()];
             nodeIDs.toArray(nodeIDsArray);
@@ -219,12 +220,16 @@ public class Node {
                 flag |= msg;
             }
             if (!flag) {
-                boolean _isElectionFinished = true;
-                // This is masterNode (send others )
+                _isElectionFinished = true;
             }
         } else {
-            boolean _isElectionFinished = true;
-            // This is masterNode (send others )
+            _isElectionFinished = true;
+        }
+        if (_isElectionFinished) {
+            for (NodeInfo nodeInfo : dictionary) {
+                Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
+                pds.setMasterNode(self.getIp());
+            }
         }
     }
 

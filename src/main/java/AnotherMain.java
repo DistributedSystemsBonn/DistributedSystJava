@@ -31,6 +31,7 @@ public class AnotherMain {
 
         //HamachiIpPort = "25.124.17.178:9177";
         HamachiIpPort += ":" + "9177";
+        //HamachiIpPort = "25.95.123.198:9177";
         System.out.println("ip:port - " + HamachiIpPort);
         Node node = new Node(HamachiIpPort);
         PdsServiceImpl.setNode(node);
@@ -101,11 +102,16 @@ public class AnotherMain {
                 System.out.println("signed off the network");
             } else if (input.equals("start")) {
                 if (node.getDictionary().size() > 0) {
-                    node.start();
+                    node.startBullyElection();
+                    System.out.println("Select an algorithm:");
+                    System.out.println(" - CME alg (Centralised Mutual Exclusion)");
+                    System.out.println(" - RA alg (Ricart & Agrawala)");
                 } else {
                     System.out.println("error -- node is not in the network");
                 }
-            }  else {
+            }  else if (input.equals("CME alg") && node.getMasterNode().getIp() != null) {
+                node.CME();
+            } else {
                 System.out.println("error -- unknown command");
             }
         }
