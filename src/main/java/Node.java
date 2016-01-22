@@ -184,6 +184,16 @@ public class Node {
     }
 
 
+    protected String getIpPortById(String id) {
+        for (NodeInfo nodeInfo : dictionary) {
+            if (nodeInfo.getId().equals(id)) {
+                return nodeInfo.getIp();
+            }
+        }
+
+        return "";
+    }
+
     public void startBullyElection() {
         // Creating an array of IDs that are bigger then this one
         List<String> nodeIDs = new ArrayList<String>();
@@ -199,8 +209,8 @@ public class Node {
             // end of creating
             boolean flag = false;
             boolean msg;
-            for (String ipPort : nodeIDsArray) {
-                msg = sendElectionMsg(ipPort);
+            for (String id : nodeIDsArray) {
+                msg = sendElectionMsg(getIpPortById(id));
                 try {
                     Thread.sleep(1000);                 //1000 milliseconds is one second.
                 } catch (InterruptedException ex) {
