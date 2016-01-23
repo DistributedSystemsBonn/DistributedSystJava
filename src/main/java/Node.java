@@ -48,9 +48,11 @@ public class Node {
 
     public void signOff() {
         try {
-            for (int i = 0; i < dictionary.size(); i++) {
+            int i = 0;
+            while (i < dictionary.size()) {
                 Host pds = clientFactoryPDS.getClient(dictionary.get(i).getIp());
                 pds.signOff(self.getIp());
+                i++;
             }
             dictionary.clear();
         } catch (Exception ex) {

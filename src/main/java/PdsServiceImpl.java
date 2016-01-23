@@ -25,22 +25,6 @@ public class PdsServiceImpl {
         node.getDictionary().add(nodeInfo);
     }
 
-    public boolean signOff (String DelIpPort) {
-        String[] ipPorts = node.getIpPorts();
-        int DelIpIndex = 0;
-        for (String ipPort : ipPorts) {
-            if (ipPort.equals(DelIpPort)) {
-                break;
-            }
-            DelIpIndex = DelIpIndex + 1;
-        }
-        node.getDictionary().remove(DelIpIndex);
-
-        System.out.println(DelIpPort + " was signed off");
-        return true;
-    }
-
-
     public boolean receiveElectionMsg(String Ip) {
         node.startBullyElection();
         return true;
@@ -48,5 +32,18 @@ public class PdsServiceImpl {
 
     public void setMasterNode(String ipAndPort) {
         node.setMasterNode(ipAndPort);
+    }
+
+    public boolean signOff(String ipPort) {
+        List<NodeInfo> nodeInfos = node.getDictionary();
+        for (NodeInfo nodeInfo : nodeInfos) {
+            if (nodeInfo.getIp().equals(ipPort)) {
+                nodeInfos.remove(nodeInfo);
+                System.out.println(ipPort + " signed off");
+                return true;
+            }
+        }
+
+        return false;
     }
 }
