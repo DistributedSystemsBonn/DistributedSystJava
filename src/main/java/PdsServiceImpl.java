@@ -1,6 +1,4 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class PdsServiceImpl {
     private static Node node;
@@ -51,7 +49,20 @@ public class PdsServiceImpl {
                 return true;
             }
         }
-
         return false;
+    }
+
+    public String readResource(String ipPort) {
+        boolean free = true;
+        Queue<String> masterQueue = new ArrayDeque<String>();
+        if (free) {
+            return "true";
+        } else {
+            masterQueue.add(ipPort);
+        }
+        return "";
+    }
+    void updateResource(String updateStr, String ipAndPort){
+
     }
 }

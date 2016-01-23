@@ -61,15 +61,19 @@ public class Node {
     }
 
     public void start(boolean isRicart) {
-        startBullyElection();
-        for (NodeInfo nodeInfo : dictionary) {
-            Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
-            pds.getStartMsg(isRicart);
-        }
-        if (isRicart) {
-            startRicartAgrawala();
-        } else {
-            startCentralMutualExclusion();
+        boolean isMasterElected = false;
+        while (!isMasterElected) {
+            startBullyElection();
+            for (NodeInfo nodeInfo : dictionary) {
+                Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
+                pds.getStartMsg(isRicart);
+            }
+            isMasterElected = true;
+            if (isRicart) {
+                isMasterElected = startRicartAgrawala();
+            } else {
+                isMasterElected = startCentralMutualExclusion();
+            }
         }
     }
 
@@ -125,25 +129,36 @@ public class Node {
     }
 
 
-    public void startRicartAgrawala() {
+    public boolean startRicartAgrawala() {
         try {
             Thread.sleep(1000);                 //1000 milliseconds is one second.
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
-
+        try {
+            Host pds = clientFactoryPDS.getClient(masterNode);
+            String masterString = pds.readResource(self.getIp());
+        } catch (Exception ex) {
+            return false;
+        }
+        return true;
     }
 
-    public void startCentralMutualExclusion() {
+    public boolean startCentralMutualExclusion() {
         try {
             Thread.sleep(1000);                 //1000 milliseconds is one second.
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
-        Host pds = clientFactoryPDS.getClient(masterNode);
-        String masterString = pds.readResource(self.getIp());
-        masterString += self.getId();
-        pds.updateResource(masterString, self.getIp());
+        try {
+            Host pds = clientFactoryPDS.getClient(masterNode);
+            String masterString = pds.readResource(self.getIp());
+            masterString += self.getId();
+            pds.updateResource(masterString, self.getIp());
+        } catch (Exception ex) {
+            return false;
+        }
+        return true;
     }
 
 
