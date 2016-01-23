@@ -50,148 +50,12 @@ public class Node {
         try {
             for (int i = 0; i < dictionary.size(); i++) {
                 Host pds = clientFactoryPDS.getClient(dictionary.get(i).getIp());
-                pds.DelHost(self.getIp());
+                pds.signOff(self.getIp());
             }
             dictionary.clear();
         } catch (Exception ex) {
             System.out.println(ex);
         }
-    }
-
-    public void start() {
-        System.out.println("master node election...");
-        NodeInfo MasterNode;
-        //MasterNode = electMasterNode();
-    }
-
-    /*
-        protected NodeInfo electMasterNode() {
-            List<UUID> nodeIDs = new ArrayList<UUID>();
-            for (NodeInfo nodeInfo : dictionary) {
-                if (getSelf().getId().compareTo(nodeInfo.getId()) == -1) {
-                    nodeIDs.add(nodeInfo.getId());
-                }
-            }
-            UUID[] nodeIDsArray = new UUID[nodeIDs.size()];
-            nodeIDs.toArray(nodeIDsArray);
-            Arrays.sort(nodeIDsArray);
-            boolean isMaster = true;
-            Calendar calendar = Calendar.getInstance();
-            java.util.Date now = calendar.getTime();
-            if (nodeIDsArray.length != 0) {
-                while (masterNode.getIp() == null) {
-                    for (int i = nodeIDsArray.length - 1; i >= 0; i--) {
-                        for (NodeInfo nodeInfo : dictionary) {
-                            if (nodeInfo.getId().equals(nodeIDsArray[i])) {
-                                try {
-                                    Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
-                                    if (pds.isAlive().equals("Ok")) {
-                                        isMaster = false;
-                                    }
-                                } catch (Exception ex) {
-                                    System.out.println(ex);
-                                }
-                            }
-                        }
-                    }
-                    if (isMaster) {
-                        masterNode = getSelf();
-                        System.out.println("master node is " + masterNode.getIp());
-                        for (NodeInfo node : dictionary) {
-                            Host pds = clientFactoryPDS.getClient(node.getIp());
-                            pds.masterMessage(self.getIp(), self.getId());
-                        }
-                        break;
-                    }
-                }
-                try {
-                    Thread.sleep(1000);                 //1000 milliseconds is one second.
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            } else {
-                masterNode = getSelf();
-                System.out.println("master node is " + masterNode.getIp());
-                for (NodeInfo node : dictionary) {
-                    try {
-                        Host pds = clientFactoryPDS.getClient(node.getIp());
-                        pds.masterMessage(self.getIp(), self.getId());
-                    } catch (Exception ex) {
-                        System.out.println(ex);
-                    }
-                }
-            }
-            return masterNode;
-        }
-    */
-    public void CME() {
-        System.out.println("Centralised Mutual Exclusion used for connecting to " + getMasterNode());
-        for (NodeInfo node : dictionary) {
-            try {
-                Host pds = clientFactoryPDS.getClient(node.getIp());
-                pds.loop();
-            } catch (Exception ex) {
-                System.out.println(ex);
-            }
-        }
-    }
-
-    public void tram() {
-        try {
-            Host pds = clientFactoryPDS.getClient(getMasterNode());
-            Boolean isAccess;
-            String masterStr = pds.getString();
-            masterStr += self.getIp();
-            pds = clientFactoryPDS.getClient(getMasterNode());
-        } catch (Exception ex) {
-            System.out.println(ex);
-        }
-    }
-
-    public NodeInfo getSelf() {
-        return self;
-    }
-
-    public void setSelf(NodeInfo self) {
-        this.self = self;
-    }
-
-    public String getMasterNode() {
-        return masterNode;
-    }
-
-    public void setMasterNode(String masterNode) {
-        System.out.println("Master node is " + masterNode);
-        this.masterNode = masterNode;
-    }
-
-    public void setDictionary(List<NodeInfo> dictionary) {
-        this.dictionary = dictionary;
-    }
-
-    public List<NodeInfo> getDictionary() {
-        return dictionary;
-    }
-
-    public String[] getIpPorts() {
-        String[] ipPorts = new String[dictionary.size()];
-
-        for (int i = 0; i < dictionary.size(); i++) {
-            ipPorts[i] = dictionary.get(i).getIp();
-        }
-
-        return ipPorts;
-    }
-
-
-    protected String getIpPortById(String id) {
-        for (NodeInfo nodeInfo : dictionary) {
-            if (nodeInfo.getId().equals(id)) {
-                return nodeInfo.getIp();
-            }
-        }
-
-        return "";
     }
 
     public void startBullyElection() {
@@ -239,5 +103,60 @@ public class Node {
         boolean msg = false;
         msg = pds.receiveElectionMsg(self.getIp()); // the receiver starts "election algorithm" thread and return true;
         return msg;
+    }
+
+
+    public void startRicartAgrawala() {
+        
+    }
+
+    public void startCentralMutualExclusion() {
+
+    }
+
+
+    public NodeInfo getSelf() {
+        return self;
+    }
+
+    public void setSelf(NodeInfo self) {
+        this.self = self;
+    }
+
+    public String getMasterNode() {
+        return masterNode;
+    }
+
+    public void setMasterNode(String masterNode) {
+        System.out.println("Master node is " + masterNode);
+        this.masterNode = masterNode;
+    }
+
+    public void setDictionary(List<NodeInfo> dictionary) {
+        this.dictionary = dictionary;
+    }
+
+    public List<NodeInfo> getDictionary() {
+        return dictionary;
+    }
+
+    public String[] getIpPorts() {
+        String[] ipPorts = new String[dictionary.size()];
+
+        for (int i = 0; i < dictionary.size(); i++) {
+            ipPorts[i] = dictionary.get(i).getIp();
+        }
+
+        return ipPorts;
+    }
+
+    protected String getIpPortById(String id) {
+        for (NodeInfo nodeInfo : dictionary) {
+            if (nodeInfo.getId().equals(id)) {
+                return nodeInfo.getIp();
+            }
+        }
+
+        return "";
     }
 }

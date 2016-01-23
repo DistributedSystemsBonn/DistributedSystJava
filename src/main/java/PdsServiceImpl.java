@@ -10,23 +10,13 @@ public class PdsServiceImpl {
     }
 
     public Object[] getHosts(String ipAndPort) {
-        //String[] ipPorts = node.getIpPorts();
         Object[] ipPorts = node.getIpPorts();
-
         NodeInfo newNode = new NodeInfo();
         newNode.setIp(ipAndPort);
         node.getDictionary().add(newNode);
 
         System.out.println("joining request from " + ipAndPort);
-
         return ipPorts;
-    }
-
-    public String echo() {
-        node.start();
-        //System.out.println(echo);
-        String response = "Ok";
-        return response;
     }
 
     public void addNewHost(String ipAndPort) {
@@ -35,7 +25,7 @@ public class PdsServiceImpl {
         node.getDictionary().add(nodeInfo);
     }
 
-    public void DelHost(String DelIpPort) {
+    public boolean signOff (String DelIpPort) {
         String[] ipPorts = node.getIpPorts();
         int DelIpIndex = 0;
         for (String ipPort : ipPorts) {
@@ -47,34 +37,9 @@ public class PdsServiceImpl {
         node.getDictionary().remove(DelIpIndex);
 
         System.out.println(DelIpPort + " was signed off");
+        return true;
     }
 
-    public String isAlive() {
-        node.start();
-        String response = "Ok";
-        return response;
-    }
-
-    /*public void masterMessage(String ipPort) {
-        NodeInfo masterNodeInfo = new NodeInfo();
-        masterNodeInfo.setIp(ipPort);
-        node.setMasterNode(masterNodeInfo);
-        System.out.println("master node is " + masterNodeInfo.getIp());
-    }*/
-
-    public void loop() {
-        try {
-            Thread.sleep(1000);                 //1000 milliseconds is one second.
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-        node.tram();
-    }
-
-    public String getString() {
-        String masterStr = "wwwww";
-        return masterStr;
-    }
 
     public boolean receiveElectionMsg(String Ip) {
         node.startBullyElection();

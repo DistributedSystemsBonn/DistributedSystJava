@@ -7,10 +7,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
-import java.util.UUID;
 
 public class Main {
     public static void main(String[] args) throws Exception { //
@@ -65,7 +62,8 @@ public class Main {
         System.out.println(" - join ip:port");
         System.out.println(" - gethosts");
         System.out.println(" - sign off");
-        System.out.println(" - start");
+        System.out.println(" - start_ct");
+        System.out.println(" - start_ra");
         System.out.println(" - exit");
 
         while (true) {
@@ -90,7 +88,6 @@ public class Main {
                 } else {
                     String ipPort = input.substring(5);
                     node.join(ipPort);
-                    //System.out.println("joined to " + ipPort);
                 }
             } else if (input.equals("gethosts")) {
                 String[] ipPorts = node.getIpPorts();
@@ -100,17 +97,20 @@ public class Main {
             } else if (input.equals("sign off")) {
                 node.signOff();
                 System.out.println("signed off the network");
-            } else if (input.equals("start")) {
+            } else if (input.equals("start_ct")) {
                 if (node.getDictionary().size() > 0) {
                     node.startBullyElection();
-                    System.out.println("Select an algorithm:");
-                    System.out.println(" - CME alg (Centralised Mutual Exclusion)");
-                    System.out.println(" - RA alg (Ricart & Agrawala)");
+                    node.startCentralMutualExclusion();
                 } else {
                     System.out.println("error -- node is not in the network");
                 }
-            }  else if (input.equals("CME alg") && node.getMasterNode() != null) {
-                node.CME();
+            }  else if (input.equals("start_ra")){
+                if (node.getDictionary().size() > 0) {
+                    node.startBullyElection();
+                    node.startRicartAgrawala();
+                } else {
+                    System.out.println("error -- node is not in the network");
+                }
             } else {
                 System.out.println("error -- unknown command");
             }
