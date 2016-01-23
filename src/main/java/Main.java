@@ -11,7 +11,7 @@ import java.util.Enumeration;
 
 public class Main {
     public static void main(String[] args) throws Exception { //
-
+        // defining IP of this node
         String HamachiIpPort = null; //
         Enumeration e = NetworkInterface.getNetworkInterfaces();
         while(e.hasMoreElements()) {
@@ -25,6 +25,7 @@ public class Main {
                 HamachiIpPort = i.getHostAddress();
             }
         }
+        // stop defining
 
         //HamachiIpPort = "25.124.17.178:9178";
         HamachiIpPort += ":" + "9178";
@@ -73,7 +74,6 @@ public class Main {
 
             if (input.equals("exit")) {
                 System.exit(0);
-
             } else if (input.length() >= 4 && input.substring(0, 4).equals("join")) {
                 System.out.println("joining...");
                 int flg = 1;
