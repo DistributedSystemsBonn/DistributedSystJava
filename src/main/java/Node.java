@@ -114,9 +114,13 @@ public class Node {
     }
 
     public boolean sendElectionMsg(String ipPort) {
-        Host pds = clientFactoryPDS.getClient(ipPort); // call proxy.ReceiveElectionMsg() method of target host.
         boolean msg = false;
-        msg = pds.receiveElectionMsg(self.getIp()); // the receiver starts "election algorithm" thread and return true;
+        try {
+            Host pds = clientFactoryPDS.getClient(ipPort); // call proxy.ReceiveElectionMsg() method of target host.
+            msg = pds.receiveElectionMsg(self.getIp()); // the receiver starts "election algorithm" thread and return true;
+        } catch (Exception ex) {
+            System.out.println("Cannot connect " + ipPort);
+        }
         return msg;
     }
 
@@ -137,7 +141,9 @@ public class Node {
             Thread.currentThread().interrupt();
         }
         Host pds = clientFactoryPDS.getClient(masterNode);
-
+        String masterString = pds.readResource(self.getIp());
+        masterString += self.getId();
+        pds.updateResource(masterString, self.getIp());
     }
 
 
