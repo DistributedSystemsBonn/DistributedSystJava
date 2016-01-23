@@ -58,6 +58,19 @@ public class Node {
         }
     }
 
+    public void start(boolean isRicart) {
+        startBullyElection();
+        for (NodeInfo nodeInfo : dictionary) {
+            Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
+            pds.getStartMsg(isRicart);
+        }
+        if (isRicart) {
+            startRicartAgrawala();
+        } else {
+            startCentralMutualExclusion();
+        }
+    }
+
     public void startBullyElection() {
         // Creating an array of IDs that are bigger then this one
         List<String> nodeIDs = new ArrayList<String>();
@@ -107,10 +120,21 @@ public class Node {
 
 
     public void startRicartAgrawala() {
-        
+        try {
+            Thread.sleep(1000);                 //1000 milliseconds is one second.
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+
     }
 
     public void startCentralMutualExclusion() {
+        try {
+            Thread.sleep(1000);                 //1000 milliseconds is one second.
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+        Host pds = clientFactoryPDS.getClient(masterNode);
 
     }
 

@@ -99,15 +99,13 @@ public class Main {
                 System.out.println("signed off the network");
             } else if (input.equals("start_ct")) {
                 if (node.getDictionary().size() > 0) {
-                    node.startBullyElection();
-                    node.startCentralMutualExclusion();
+                    node.start(false);
                 } else {
                     System.out.println("error -- node is not in the network");
                 }
             }  else if (input.equals("start_ra")){
                 if (node.getDictionary().size() > 0) {
-                    node.startBullyElection();
-                    node.startRicartAgrawala();
+                    node.start(true);
                 } else {
                     System.out.println("error -- node is not in the network");
                 }

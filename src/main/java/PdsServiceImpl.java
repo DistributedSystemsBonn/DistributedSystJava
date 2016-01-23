@@ -40,6 +40,13 @@ public class PdsServiceImpl {
         return true;
     }
 
+    public void getStartMsg (boolean isRicart) {
+        if (isRicart) {
+            node.startRicartAgrawala();
+        } else {
+            node.startCentralMutualExclusion();
+        }
+    }
 
     public boolean receiveElectionMsg(String Ip) {
         node.startBullyElection();
