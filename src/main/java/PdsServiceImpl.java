@@ -55,12 +55,12 @@ public class PdsServiceImpl {
         return response;
     }
 
-    public void masterMessage(String ipPort) {
+    /*public void masterMessage(String ipPort) {
         NodeInfo masterNodeInfo = new NodeInfo();
         masterNodeInfo.setIp(ipPort);
         node.setMasterNode(masterNodeInfo);
         System.out.println("master node is " + masterNodeInfo.getIp());
-    }
+    }*/
 
     public void loop() {
         try {
@@ -80,8 +80,8 @@ public class PdsServiceImpl {
         node.startBullyElection();
         return true;
     }
-}
 
     public void setMasterNode(String ipAndPort) {
         node.setMasterNode(ipAndPort);
     }
+}

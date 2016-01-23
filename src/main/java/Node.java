@@ -161,6 +161,7 @@ public class Node {
     }
 
     public void setMasterNode(String masterNode) {
+        System.out.println("Master node is " + masterNode);
         this.masterNode = masterNode;
     }
 
@@ -225,6 +226,7 @@ public class Node {
             _isElectionFinished = true;
         }
         if (_isElectionFinished) {
+            System.out.println("HA-HA-HA I AM MASTER NODE!!!");
             for (NodeInfo nodeInfo : dictionary) {
                 Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
                 pds.setMasterNode(self.getIp());

@@ -109,7 +109,7 @@ public class Main {
                 } else {
                     System.out.println("error -- node is not in the network");
                 }
-            }  else if (input.equals("CME alg") && node.getMasterNode().getIp() != null) {
+            }  else if (input.equals("CME alg") && node.getMasterNode() != null) {
                 node.CME();
             } else {
                 System.out.println("error -- unknown command");
