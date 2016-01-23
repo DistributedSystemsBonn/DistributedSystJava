@@ -13,4 +13,11 @@ public interface Host {
 
     String readResource(String ipAndPort);
     void updateResource(String updateStr, String ipAndPort);
+
+    void getSyncRequestCT(long id, String ipAndPort);
+    void getReleasedMsgCT(long id, String fromIpAndPort);
+    void getAcceptResponseCT();
+
+    void getSyncRequestRA(int timestamp, long id, String ipAndPort);
+    void getAcceptResponseRA(String fromIpAndPort, int timestamp);
 }
