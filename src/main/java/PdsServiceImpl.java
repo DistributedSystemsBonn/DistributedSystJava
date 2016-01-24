@@ -109,4 +109,63 @@ public class PdsServiceImpl {
         System.out.println("Accepted for resource");
         node.isAllowedCT.set();
     }
+
+    public void getSyncRequestRA(int timestamp, long id, String ipAndPort)
+    {
+        System.out.println("SERVER: RECV " + node.getSelf().getIp() + " FROM: " + ipAndPort + " TIME: " + timestamp);
+        // create request object
+        Request request = new Request(node.getSelf().getId(), timestamp, id, ipAndPort);
+
+        if (node.state != Node.State.Held && !node.isInterested())
+        {
+            //Send accept msg to callee
+            sendAcceptResponse_RA(ipAndPort);
+        }
+        else if (node.state == Node.State.Held)
+        {
+            node.addRequest(request);
+        }
+        else if (node.isInterested())
+        {
+            if (node.clock.CompareTime(timestamp, id))
+            {   // request timestamp is smaller than this node's timestamp.
+                //Send accept msg to callee
+                sendAcceptResponse_RA(ipAndPort);
+            }
+            else
+            {
+                node.addRequest(request);
+            }
+        }
+        node.clock.receiveEventHandle(timestamp);
+    }
+
+    public void getAcceptResponseRA(String fromIpAndPort, int timestamp) {
+        String myIp = node.getSelf().getIp();
+
+        node.removeFromAcceptList(fromIpAndPort);
+
+        //check if all accept messages received. if yes, start accessing to resource
+        if (node.isGotAllOk()) {
+            System.out.println("RESET. GOT ALL AT: " + myIp);
+            node.hasGotAllMessagesBack.Set();
+        }
+
+        //Clock: recive handle
+        node.clock.receiveEventHandle(timestamp);
+    }
+
+    public void sendAcceptResponse_RA(String ipAndPort)
+    {
+        //Send event in clock
+        node.clock.sendEventHandle();
+        String myIp = node.getSelf().getIp();
+        System.out.println("SERVER: " + myIp + " SEND OK TO: " + ipAndPort);
+
+        synchronized (Shared.SendLock) {
+            Host pds = node.clientFactoryPDS.getClient(ipAndPort);
+            //send accept response with parameter which describes our host
+            pds.getAcceptResponseRA(node.getSelf().getIp(), node.clock.value);
+        }
+    }
 }

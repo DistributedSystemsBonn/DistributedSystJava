@@ -1,35 +1,31 @@
 public class ExtendedLamportClock {
-    private long _localId;          // Machine ID
+    private long _localId;  // Machine ID
     public int Value; // Logical Clock
 
     public ExtendedLamportClock(long localId) {
         _localId = localId;
     }
 
-    private void Increment() {
+    public int sendEventHandle() {
         ++Value;
-    }
-
-    public int SendEventHandle() {
-        Increment();
         return Value;
     }
 
-    public int LocalEventHandle() {
-        Increment();
+    public int localEventHandle() {
+        ++Value;
         return Value;
     }
 
-    public int ReceiveEventHandle(int candidateValue) {
+    public int receiveEventHandle(int candidateValue) {
         if (candidateValue > Value) {
             Value = candidateValue;
         }
-        Increment();
+        ++Value;
         System.out.println("UPDATE CLOCK TO: " + Value);
         return Value;
     }
 
-    public boolean CompareTime(int requestLamportClock, long remoteId) {
+    public boolean compareTime(int requestLamportClock, long remoteId) {
         if (remoteId == _localId) {
             System.out.println("*** remoteID and localID is same:: " + remoteId);
         }
