@@ -3,6 +3,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.net.SyslogAppender;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
@@ -59,10 +60,10 @@ public class Node {
                 pds = clientFactoryPDS.getClient(nodeInfo.getIp());
                 pds.addNewHost(self.getIp()); // sending to the node s notification about self connection
             }
+            System.out.println("joined to " + ipPort);
         } catch (Exception ex) {
-            System.out.println(ex); // if cannot access the node output an error
+            System.out.println("error - cannot access the node"); // if cannot access the node output an error
         }
-        System.out.println("joined to " + ipPort);
         return dictionary;
     }
 
@@ -98,7 +99,7 @@ public class Node {
         // Creating an array of IDs that are bigger then this one
         List<Long> nodeIDs = new ArrayList<Long>();
         for (NodeInfo nodeInfo : dictionary) {
-            if (getSelf().getId() < nodeInfo.getId())) { // isolation the nodes with higher id
+            if (getSelf().getId() < nodeInfo.getId()) { // isolation the nodes with higher id
                 nodeIDs.add(nodeInfo.getId());
             }
         }
