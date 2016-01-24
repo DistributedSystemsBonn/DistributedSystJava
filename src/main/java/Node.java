@@ -31,12 +31,13 @@ public class Node {
 
     public enum State {Released, Requested, Held}
 
-    ;
-
     public State state;
+
+    public List<String> acceptList;
 
     public ManualResetEvent isAllowedCT = new ManualResetEvent(false);
     public ManualResetEvent isElectionFinished = new ManualResetEvent(false);
+    public ManualResetEvent hasGotAllMessagesBack = new ManualResetEvent(false);
 
     boolean _isElectionFinishedBully;
 
@@ -49,6 +50,8 @@ public class Node {
         masterQueue = new LinkedList<Request>();
 
         state = State.Released;
+
+        acceptList = new ArrayList<String>();
     }
 
     public List<NodeInfo> join(String ipPort) {
@@ -220,12 +223,23 @@ public class Node {
 
             if (executeTime - startTime > MAX_DURATION) {
                 if (isRicart && !isMasterNode()) {
-                    //  _ricartSyncAlgClient.Release_RA();
+                    releaseRA();
                 }
                 System.out.println("Exited loop with " + (executeTime - startTime));
                 break;
             }
         }
+
+        String finalString = null;
+        try {
+            Thread.sleep(5000);
+            finalString = readFromMasterNode();
+        } catch (Exception ignored) {
+
+        }
+        System.out.println("\n===============================");
+        System.out.println("Final string: " + finalString);
+        System.out.println("===============================");
 
 //        try {
 //            Host pds = clientFactoryPDS.getClient(masterNode);
@@ -238,10 +252,54 @@ public class Node {
 //        return true;
     }
 
+    private void sendSyncMsg(NodeInfo toNode) {
+       // var logicClockTs = _module.Clock.SendEventHandle();
+
+        int logicClockTs = 0;
+
+        acceptList.add(toNode.getIp());
+
+        synchronized (Shared.SendLock) {
+            Host pds = clientFactoryPDS.getClient(toNode.getIp());
+            pds.getSyncRequestRA(logicClockTs, self.getId(), self.getIp());
+        }
+    }
+
     public void processResourceFromMasterNode(boolean isRicart) {
 
         if (isRicart) {
-            // TODO: 24.01.16
+            List<NodeInfo> hostListWithoutMaster = new ArrayList<NodeInfo>();
+            for (NodeInfo nodeInfo : dictionary) {
+                if (nodeInfo.getIp().equals(masterNode)) continue;
+                hostListWithoutMaster.add(nodeInfo);
+            }
+
+            hasGotAllMessagesBack.reset();
+            state = State.Requested;
+
+            System.out.println("Client: [" + self.getIp() + "] Current timestamp: "/* + _module.Clock.Value*/);
+            System.out.println("Client: [" + self.getIp() + "] Capacity: " + hostListWithoutMaster.size());
+
+            for (final NodeInfo nodeInfo : hostListWithoutMaster) {
+                System.out.println(" CLIENT: SEND REQ FROM: [" + self.getIp() + "] TO: [" +
+                        nodeInfo.getId() + "]");
+                new Thread() {
+                    public void run() {
+                        sendSyncMsg(nodeInfo);
+                    }
+                }.start();
+            }
+
+            //wait until receive all messages. .Set() method is called in RicartSyncAlgServer
+            try {
+                hasGotAllMessagesBack.waitOne();
+            } catch (Exception ignored) {
+
+            }
+
+            System.out.println("CLIENT: RECV ALL ACCEPT MESSAGES AT: [" + self.getIp() + "]");
+            state = State.Held;
+
         } else {
 
             isAllowedCT.reset();
@@ -282,7 +340,7 @@ public class Node {
         }
 
         if (isRicart) {
-            // TODO: 24.01.16
+            releaseRA();
         } else {
             Host pds = clientFactoryPDS.getClient(masterNode);
             pds.getReleasedMsgCT(self.getId(), self.getIp());
@@ -380,5 +438,36 @@ public class Node {
             System.out.println("Server: Remove request from queue: " + firstNode.getCallerId());
         }
         return firstNode;
+    }
+
+    public List<Request> QueueRA = new ArrayList<Request>();
+
+    public void releaseRA() {
+
+        state = State.Released;
+
+        for (Request request : QueueRA) {
+            sendAcceptResponse(request.getIpPort());
+        }
+
+        QueueRA.clear();
+
+        System.out.println("Client: Released resource at [" + self.getIp() + "]");
+    }
+
+    public void sendAcceptResponse(String ipAndPort)
+    {/*
+        //Send event in clock
+        _module.Clock.SendEventHandle();
+        var myIp = _module.LocalNodeInfo.GetIpAndPort();
+        LogHelper.WriteStatus("SERVER: " + myIp + " SEND OK TO: " + ipAndPort);
+        //Debug.WriteLine("SERVER: " + myIp + "SEND OK TO: " + ipAndPort);
+
+        lock (Shared.SendLock)
+        {
+            _module.Proxy.Url = NetworkHelper.FormXmlRpcUrl(ipAndPort);
+            //send accept response with parameter which describes our host
+            _module.Proxy.GetAcceptResponse_RA(_module.LocalNodeInfo.GetIpAndPort(), _module.Clock.Value);
+        }*/
     }
 }
