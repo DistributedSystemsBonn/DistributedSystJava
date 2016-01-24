@@ -2,7 +2,7 @@ import java.util.UUID;
 
 public class NodeInfo {
     private String ip;
-    private String id;
+    private long id;
 
     public String getIp() {
         return ip;
@@ -21,10 +21,10 @@ public class NodeInfo {
         for (String part : parts) id += part;
         id += Integer.toString(port);
 
-        this.id = id;
+        this.id = Long.parseLong(id);
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 }

@@ -28,12 +28,8 @@ public class PdsServiceImpl {
         return true;
     }
 
-    public void getStartMsg (boolean isRicart) {
-        if (isRicart) {
-            node.startRicartAgrawala();
-        } else {
-            node.startCentralMutualExclusion();
-        }
+    public void getStartMsg(boolean isRicart) {
+        node.startProcess(isRicart);
     }
 
     public void setMasterNode(String ipAndPort) {
@@ -53,16 +49,51 @@ public class PdsServiceImpl {
     }
 
     public String readResource(String ipPort) {
-        boolean free = true;
-        Queue<String> masterQueue = new ArrayDeque<String>();
-        if (free) {
-            return "true";
-        } else {
-            masterQueue.add(ipPort);
-        }
-        return "";
+        System.out.println("\nRead resource from: " + ipPort);
+        System.out.println("::Current String:: " + node.getResource());
+        return node.getResource();
     }
-    void updateResource(String updateStr, String ipAndPort){
 
+    public void updateResource(String updateStr, String ipPort) {
+        node.setResource(updateStr);
+        System.out.println("\nUpdate resource from: " + ipPort);
+        System.out.println("::String:: " + node.getResource());
+    }
+
+    public void getSyncRequestCT(long id, String ipPort) {
+        Request request = new Request(0, 0, id, ipPort);
+
+        System.out.println("Master: get request from " + id);
+        if (node.state == Node.State.Released) {
+            sendAcceptResponse(ipPort);
+        } else if (node.state == Node.State.Held) {
+            node.addRequest(request);
+        }
+    }
+
+    protected void sendAcceptResponse(String ipPort) {
+        Host pds = node.clientFactoryPDS.getClient(ipPort);
+        node.state = Node.State.Held;
+        pds.getAcceptResponseCT();
+    }
+
+    public void getReleasedMsgCT(long id, String fromIpAndPort) {
+        /*
+        * LogHelper.WriteStatus("Master: Released from " + fromIpAndPort);
+            _module.State = AccessState.Released;
+
+            var next = _module.PopRequest();
+            if (next != null)
+            {
+                SendAcceptResponse(next.IpAndPort);
+            }
+        * */
+
+        System.out.println("Master: Released from " + fromIpAndPort);
+        node.state = Node.State.Released;
+        Request next = node.popRequest();
+        if (next != null) {
+            sendAcceptResponse(next.getIpPort());
+        }
     }
 }

@@ -100,14 +100,14 @@ public class OneMoreMain {
             } else if (input.equals("start_ct")) {
                 if (node.getDictionary().size() > 0) {
                     node.startBullyElection();
-                    node.startCentralMutualExclusion();
+                    node.startProcess(false);
                 } else {
                     System.out.println("error -- node is not in the network");
                 }
             }  else if (input.equals("start_ra")){
                 if (node.getDictionary().size() > 0) {
                     node.startBullyElection();
-                    node.startRicartAgrawala();
+                    node.startProcess(true);
                 } else {
                     System.out.println("error -- node is not in the network");
                 }
