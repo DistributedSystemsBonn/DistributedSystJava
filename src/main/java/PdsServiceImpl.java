@@ -127,7 +127,7 @@ public class PdsServiceImpl {
         }
         else if (node.isInterested())
         {
-            if (node.clock.CompareTime(timestamp, id))
+            if (node.clock.compareTime(timestamp, id))
             {   // request timestamp is smaller than this node's timestamp.
                 //Send accept msg to callee
                 sendAcceptResponse_RA(ipAndPort);
@@ -148,7 +148,7 @@ public class PdsServiceImpl {
         //check if all accept messages received. if yes, start accessing to resource
         if (node.isGotAllOk()) {
             System.out.println("RESET. GOT ALL AT: " + myIp);
-            node.hasGotAllMessagesBack.Set();
+            node.hasGotAllMessagesBack.set();
         }
 
         //Clock: recive handle
@@ -165,7 +165,7 @@ public class PdsServiceImpl {
         synchronized (Shared.SendLock) {
             Host pds = node.clientFactoryPDS.getClient(ipAndPort);
             //send accept response with parameter which describes our host
-            pds.getAcceptResponseRA(node.getSelf().getIp(), node.clock.value);
+            pds.getAcceptResponseRA(node.getSelf().getIp(), node.clock.Value);
         }
     }
 }
