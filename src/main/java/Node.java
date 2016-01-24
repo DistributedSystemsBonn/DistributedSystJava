@@ -1,13 +1,4 @@
-import java.net.URL;
 import java.util.*;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
-
-import org.apache.log4j.net.SyslogAppender;
-import org.apache.xmlrpc.client.XmlRpcClient;
-import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
-import org.apache.xmlrpc.client.util.ClientFactory;
 
 public class Node {
 
@@ -233,7 +224,7 @@ public class Node {
                 System.out.println("Cannot READ from the same node");
             }
 
-            String fruit = getRandomFruit();
+            String fruit = getRandomFruitAndNumber();
 
             String concatenated = fromMaster.concat(fruit);
 
@@ -306,10 +297,10 @@ public class Node {
         return pds.readResource(self.getIp());
     }
 
-    protected String getRandomFruit() {
+    protected String getRandomFruitAndNumber() {
         Random r = new Random();
         String[] fruits = {"apple", "mango", "papaya", "banana", "guava", "pineapple"};
-        return fruits[r.nextInt(fruits.length)];
+        return fruits[r.nextInt(fruits.length)] + r.nextInt();
     }
 
     protected void updateMasterNodeResource(String str) throws Exception {
