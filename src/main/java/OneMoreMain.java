@@ -1,6 +1,3 @@
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.xmlrpc.server.PropertyHandlerMapping;
 import org.apache.xmlrpc.server.XmlRpcServer;
 import org.apache.xmlrpc.server.XmlRpcServerConfigImpl;
@@ -14,7 +11,7 @@ import java.util.Enumeration;
 
 public class OneMoreMain {
     public static void main(String[] args) throws Exception { //
-
+        // defining IP of this node
         String HamachiIpPort = null; //
         Enumeration e = NetworkInterface.getNetworkInterfaces();
         while(e.hasMoreElements()) {
@@ -28,9 +25,10 @@ public class OneMoreMain {
                 HamachiIpPort = i.getHostAddress();
             }
         }
+        // stop defining
 
         HamachiIpPort = "25.124.17.178:9179";
-        //HamachiIpPort += ":" + "9179";
+        //HamachiIpPort += ":" + "9178";
         //HamachiIpPort = "25.95.123.198:9178";
         System.out.println("ip:port - " + HamachiIpPort);
         Node node = new Node(HamachiIpPort);
@@ -57,7 +55,6 @@ public class OneMoreMain {
                     System.out.println("Something wrong with server");
                     System.exit(1);
                 }
-                Logger.getRootLogger().setLevel(Level.OFF); // turns off log4j WARN while joining
             }
         }.start();
 
@@ -77,7 +74,6 @@ public class OneMoreMain {
 
             if (input.equals("exit")) {
                 System.exit(0);
-
             } else if (input.length() >= 4 && input.substring(0, 4).equals("join")) {
                 System.out.println("joining...");
                 int flg = 1;
@@ -103,15 +99,13 @@ public class OneMoreMain {
                 System.out.println("signed off the network");
             } else if (input.equals("start_ct")) {
                 if (node.getDictionary().size() > 0) {
-                    node.startBullyElection();
-                    node.startProcess(false);
+                    node.start(false);
                 } else {
                     System.out.println("error -- node is not in the network");
                 }
             }  else if (input.equals("start_ra")){
                 if (node.getDictionary().size() > 0) {
-                    node.startBullyElection();
-                    node.startProcess(true);
+                    node.start(true);
                 } else {
                     System.out.println("error -- node is not in the network");
                 }

@@ -29,16 +29,30 @@ public class Node {
 
     private Object lock = new Object();
 
-    public enum State {Released, Requested, Held}
+    public boolean isInterested() {
+        return isInterested;
+    }
 
-    ;
+    public void setInterested(boolean interested) {
+        clock.LocalEventHandle();
+        isInterested = interested;
+    }
+
+    public enum State {Released, Requested, Held}
 
     public State state;
 
+    public List<String> acceptList;
+
     public ManualResetEvent isAllowedCT = new ManualResetEvent(false);
     public ManualResetEvent isElectionFinished = new ManualResetEvent(false);
+    public ManualResetEvent hasGotAllMessagesBack = new ManualResetEvent(false);
 
     boolean _isElectionFinishedBully;
+
+    public ExtendedLamportClock clock;
+
+    private boolean isInterested;
 
     public Node(String ip) {
         self = new NodeInfo(); // consist of IP (method getIp()) and id (method getId()) of the node
@@ -49,6 +63,12 @@ public class Node {
         masterQueue = new LinkedList<Request>();
 
         state = State.Released;
+
+        acceptList = new ArrayList<String>();
+
+        clock = new ExtendedLamportClock(self.getId());
+
+        isInterested = false;
     }
 
     public List<NodeInfo> join(String ipPort) {
@@ -220,12 +240,23 @@ public class Node {
 
             if (executeTime - startTime > MAX_DURATION) {
                 if (isRicart && !isMasterNode()) {
-                    //  _ricartSyncAlgClient.Release_RA();
+                    releaseRA();
                 }
                 System.out.println("Exited loop with " + (executeTime - startTime));
                 break;
             }
         }
+
+        String finalString = null;
+        try {
+            Thread.sleep(5000);
+            finalString = readFromMasterNode();
+        } catch (Exception ignored) {
+
+        }
+        System.out.println("\n===============================");
+        System.out.println("Final string: " + finalString);
+        System.out.println("===============================");
 
 //        try {
 //            Host pds = clientFactoryPDS.getClient(masterNode);
@@ -238,10 +269,54 @@ public class Node {
 //        return true;
     }
 
+    private void sendSyncMsg(NodeInfo toNode) {
+
+        int logicClockTs = clock.SendEventHandle();
+
+        acceptList.add(toNode.getIp());
+
+        synchronized (Shared.SendLock) {
+            Host pds = clientFactoryPDS.getClient(toNode.getIp());
+            pds.getSyncRequestRA(logicClockTs, self.getId(), self.getIp());
+        }
+    }
+
     public void processResourceFromMasterNode(boolean isRicart) {
 
         if (isRicart) {
-            // TODO: 24.01.16
+            List<NodeInfo> hostListWithoutMaster = new ArrayList<NodeInfo>();
+            for (NodeInfo nodeInfo : dictionary) {
+                if (nodeInfo.getIp().equals(masterNode)) continue;
+                hostListWithoutMaster.add(nodeInfo);
+            }
+
+            hasGotAllMessagesBack.reset();
+            state = State.Requested;
+            isInterested = true;
+
+            System.out.println("Client: [" + self.getIp() + "] Current timestamp: "/* + _module.Clock.Value*/);
+            System.out.println("Client: [" + self.getIp() + "] Capacity: " + hostListWithoutMaster.size());
+
+            for (final NodeInfo nodeInfo : hostListWithoutMaster) {
+                System.out.println(" CLIENT: SEND REQ FROM: [" + self.getIp() + "] TO: [" +
+                        nodeInfo.getId() + "]");
+                new Thread() {
+                    public void run() {
+                        sendSyncMsg(nodeInfo);
+                    }
+                }.start();
+            }
+
+            //wait until receive all messages. .Set() method is called in RicartSyncAlgServer
+            try {
+                hasGotAllMessagesBack.waitOne();
+            } catch (Exception ignored) {
+
+            }
+
+            System.out.println("CLIENT: RECV ALL ACCEPT MESSAGES AT: [" + self.getIp() + "]");
+            state = State.Held;
+
         } else {
 
             isAllowedCT.reset();
@@ -282,7 +357,7 @@ public class Node {
         }
 
         if (isRicart) {
-            // TODO: 24.01.16
+            releaseRA();
         } else {
             Host pds = clientFactoryPDS.getClient(masterNode);
             pds.getReleasedMsgCT(self.getId(), self.getIp());
@@ -380,5 +455,48 @@ public class Node {
             System.out.println("Server: Remove request from queue: " + firstNode.getCallerId());
         }
         return firstNode;
+    }
+
+    public List<Request> QueueRA = new ArrayList<Request>();
+
+    public void removeFromAcceptList(String ipPort) {
+        System.out.println("SERVER: " + self.getId() + " REMOVE IP: " + ipPort);
+
+        try {
+            if (!acceptList.remove(ipPort)) {
+                throw new Exception("Element in accept list doesnt exist: " + ipPort);
+            }
+        } catch (Exception ex) {
+            System.out.println("Element in accept list doesnt exist: " + ipPort);
+        }
+    }
+
+    public boolean isGotAllOk() {
+        return acceptList.size() == 0;
+    }
+
+    public void releaseRA() {
+
+        state = State.Released;
+        isInterested = false;
+
+        for (Request request : QueueRA) {
+            sendAcceptResponse(request.getIpPort());
+        }
+
+        QueueRA.clear();
+
+        System.out.println("Client: Released resource at [" + self.getIp() + "]");
+    }
+
+
+    public void sendAcceptResponse(String ipAndPort) {
+
+        clock.SendEventHandle();
+        System.out.println("SERVER: " + self.getIp() + " SEND OK TO: " + ipAndPort);
+        synchronized (Shared.SendLock) {
+            Host pds = clientFactoryPDS.getClient(ipAndPort);
+            pds.getAcceptResponseRA(self.getIp(), clock.Value);
+        }
     }
 }
