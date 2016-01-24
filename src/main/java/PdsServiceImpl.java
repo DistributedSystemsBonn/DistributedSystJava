@@ -1,3 +1,6 @@
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import java.util.*;
 
 public class PdsServiceImpl {
@@ -8,6 +11,7 @@ public class PdsServiceImpl {
     }
 
     public Object[] getHosts(String ipAndPort) {
+
         Object[] ipPorts = node.getIpPorts();
         NodeInfo newNode = new NodeInfo();
         newNode.setIp(ipAndPort);

@@ -1,4 +1,13 @@
+import java.net.URL;
 import java.util.*;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
+
+import org.apache.log4j.net.SyslogAppender;
+import org.apache.xmlrpc.client.XmlRpcClient;
+import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
+import org.apache.xmlrpc.client.util.ClientFactory;
 
 public class Node {
 
@@ -44,6 +53,7 @@ public class Node {
 
     public List<NodeInfo> join(String ipPort) {
         try {
+
             Host pds = clientFactoryPDS.getClient(ipPort);
             Object[] ipPorts = pds.getHosts(self.getIp()); // getting IPs of all nodes in the network
 
@@ -58,10 +68,10 @@ public class Node {
                 pds = clientFactoryPDS.getClient(nodeInfo.getIp());
                 pds.addNewHost(self.getIp()); // sending to the node s notification about self connection
             }
+            System.out.println("joined to " + ipPort);
         } catch (Exception ex) {
-            System.out.println(ex); // if cannot access the node output an error
+            System.out.println("error - cannot access the node"); // if cannot access the node output an error
         }
-        System.out.println("joined to " + ipPort);
         return dictionary;
     }
 
