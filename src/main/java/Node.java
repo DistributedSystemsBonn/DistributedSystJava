@@ -26,7 +26,7 @@ public class Node {
 
     private long startTime;
 
-    private static final long MAX_DURATION = 200000000;
+    private static final long MAX_DURATION = 20000;
 
     private Object lock = new Object();
 
