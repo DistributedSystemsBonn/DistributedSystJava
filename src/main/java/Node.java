@@ -5,6 +5,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.apache.log4j.net.SyslogAppender;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
@@ -51,6 +53,7 @@ public class Node {
 
     public List<NodeInfo> join(String ipPort) {
         try {
+
             Host pds = clientFactoryPDS.getClient(ipPort);
             Object[] ipPorts = pds.getHosts(self.getIp()); // getting IPs of all nodes in the network
 
