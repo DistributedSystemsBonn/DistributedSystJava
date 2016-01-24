@@ -25,6 +25,7 @@ public class Node {
     public State state;
 
     public ManualResetEvent isAllowedCT;
+    public ManualResetEvent isElectionFinished;
 
     public Node(String ip) {
         self = new NodeInfo(); // consist of IP (method getIp()) and id (method getId()) of the node
@@ -37,6 +38,7 @@ public class Node {
         state = State.Released;
 
         isAllowedCT = new ManualResetEvent(false);
+        isElectionFinished = new ManualResetEvent(false);
     }
 
     public List<NodeInfo> join(String ipPort) {
@@ -76,10 +78,9 @@ public class Node {
         }
     }
 
-    public void start(boolean isRicart) {
+    public void start(final boolean isRicart) {
         boolean isMasterElected = false;
         while (!isMasterElected) {
-            startBullyElection(); // start of the master node election
             for (NodeInfo nodeInfo : dictionary) {
                 Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
                 pds.getStartMsg(isRicart);
@@ -87,6 +88,19 @@ public class Node {
             isMasterElected = true;
 
             startProcess(isRicart);
+            new Thread() {
+                public void run() {
+                    startProcess(isRicart);
+                }
+            }.start();
+
+            try {
+                Thread.sleep(1000);
+            } catch (Exception ignored) {
+
+            }
+
+            startBullyElection(); // start of the master node election
         }
     }
 
@@ -156,6 +170,19 @@ public class Node {
     }
 
     public void startProcess(boolean isRicart) {
+
+        System.out.println("##### Start process using " + (isRicart ? "Ricart & Agrawala ": "Centralized ")
+                + "Algorithm.");
+        System.out.println("# 0. Waiting for the Master Election #");
+
+        isElectionFinished.reset();
+
+        // wait the end of master election - which will be done by other thread.
+        try {
+            isElectionFinished.waitOne();
+        } catch (Exception ex) {
+            System.out.println("Some problem with isElectionFinished.waitOne()");
+        }
 
         if (isMasterNode()) {
             return;
@@ -259,6 +286,8 @@ public class Node {
     public void setMasterNode(String masterNode) {
         System.out.println("Master node is " + masterNode);
         this.masterNode = masterNode;
+
+        isElectionFinished.set();
     }
 
     public void setDictionary(List<NodeInfo> dictionary) {
