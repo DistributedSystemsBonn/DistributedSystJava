@@ -459,6 +459,17 @@ public class Node {
 
     public List<Request> QueueRA = new ArrayList<Request>();
 
+    public void removeFromAcceptList(String ipPort) {
+        System.out.println("SERVER: " + self.getId() + " REMOVE IP: " + ipPort);
+
+        try {
+            if (!acceptList.remove(ipPort)) {
+                throw new Exception("Element in accept list doesnt exist: " + ipPort);
+            }
+        } catch (Exception ex) {
+            System.out.println("Element in accept list doesnt exist: " + ipPort);
+        }
+    }
 
     public void releaseRA() {
 
