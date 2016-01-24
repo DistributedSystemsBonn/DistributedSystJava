@@ -29,6 +29,15 @@ public class Node {
 
     private Object lock = new Object();
 
+    public boolean isInterested() {
+        return isInterested;
+    }
+
+    public void setInterested(boolean interested) {
+        clock.LocalEventHandle();
+        isInterested = interested;
+    }
+
     public enum State {Released, Requested, Held}
 
     public State state;
@@ -41,6 +50,10 @@ public class Node {
 
     boolean _isElectionFinishedBully;
 
+    public ExtendedLamportClock clock;
+
+    private boolean isInterested;
+
     public Node(String ip) {
         self = new NodeInfo(); // consist of IP (method getIp()) and id (method getId()) of the node
         self.setIp(ip);
@@ -52,6 +65,10 @@ public class Node {
         state = State.Released;
 
         acceptList = new ArrayList<String>();
+
+        clock = new ExtendedLamportClock(self.getId());
+
+        isInterested = false;
     }
 
     public List<NodeInfo> join(String ipPort) {
@@ -253,9 +270,8 @@ public class Node {
     }
 
     private void sendSyncMsg(NodeInfo toNode) {
-       // var logicClockTs = _module.Clock.SendEventHandle();
 
-        int logicClockTs = 0;
+        int logicClockTs = clock.SendEventHandle();
 
         acceptList.add(toNode.getIp());
 
@@ -276,6 +292,7 @@ public class Node {
 
             hasGotAllMessagesBack.reset();
             state = State.Requested;
+            isInterested = true;
 
             System.out.println("Client: [" + self.getIp() + "] Current timestamp: "/* + _module.Clock.Value*/);
             System.out.println("Client: [" + self.getIp() + "] Capacity: " + hostListWithoutMaster.size());
@@ -442,9 +459,11 @@ public class Node {
 
     public List<Request> QueueRA = new ArrayList<Request>();
 
+
     public void releaseRA() {
 
         state = State.Released;
+        isInterested = false;
 
         for (Request request : QueueRA) {
             sendAcceptResponse(request.getIpPort());
@@ -455,19 +474,14 @@ public class Node {
         System.out.println("Client: Released resource at [" + self.getIp() + "]");
     }
 
-    public void sendAcceptResponse(String ipAndPort)
-    {/*
-        //Send event in clock
-        _module.Clock.SendEventHandle();
-        var myIp = _module.LocalNodeInfo.GetIpAndPort();
-        LogHelper.WriteStatus("SERVER: " + myIp + " SEND OK TO: " + ipAndPort);
-        //Debug.WriteLine("SERVER: " + myIp + "SEND OK TO: " + ipAndPort);
 
-        lock (Shared.SendLock)
-        {
-            _module.Proxy.Url = NetworkHelper.FormXmlRpcUrl(ipAndPort);
-            //send accept response with parameter which describes our host
-            _module.Proxy.GetAcceptResponse_RA(_module.LocalNodeInfo.GetIpAndPort(), _module.Clock.Value);
-        }*/
+    public void sendAcceptResponse(String ipAndPort) {
+
+        clock.SendEventHandle();
+        System.out.println("SERVER: " + self.getIp() + " SEND OK TO: " + ipAndPort);
+        synchronized (Shared.SendLock) {
+            Host pds = clientFactoryPDS.getClient(ipAndPort);
+            pds.getAcceptResponseRA(self.getIp(), clock.Value);
+        }
     }
 }
