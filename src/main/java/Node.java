@@ -34,7 +34,7 @@ public class Node {
     }
 
     public void setInterested(boolean interested) {
-        clock.LocalEventHandle();
+        clock.localEventHandle();
         isInterested = interested;
     }
 
@@ -271,7 +271,7 @@ public class Node {
 
     private void sendSyncMsg(NodeInfo toNode) {
 
-        int logicClockTs = clock.SendEventHandle();
+        int logicClockTs = clock.sendEventHandle();
 
         acceptList.add(toNode.getIp());
 
@@ -492,7 +492,7 @@ public class Node {
 
     public void sendAcceptResponse(String ipAndPort) {
 
-        clock.SendEventHandle();
+        clock.sendEventHandle();
         System.out.println("SERVER: " + self.getIp() + " SEND OK TO: " + ipAndPort);
         synchronized (Shared.SendLock) {
             Host pds = clientFactoryPDS.getClient(ipAndPort);
