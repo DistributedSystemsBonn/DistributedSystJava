@@ -98,7 +98,7 @@ public class Node {
         // Creating an array of IDs that are bigger then this one
         List<Long> nodeIDs = new ArrayList<Long>();
         for (NodeInfo nodeInfo : dictionary) {
-            if (getSelf().getId() < nodeInfo.getId())) { // isolation the nodes with higher id
+            if (getSelf().getId() < nodeInfo.getId()) { // isolation the nodes with higher id
                 nodeIDs.add(nodeInfo.getId());
             }
         }
