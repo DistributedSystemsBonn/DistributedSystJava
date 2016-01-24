@@ -96,4 +96,9 @@ public class PdsServiceImpl {
             sendAcceptResponse(next.getIpPort());
         }
     }
+
+    public void getAcceptResponseCT() {
+        System.out.println("Accepted for resource");
+        node.isAllowedCT.set();
+    }
 }
