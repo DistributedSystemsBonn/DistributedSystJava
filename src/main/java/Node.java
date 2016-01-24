@@ -471,6 +471,10 @@ public class Node {
         }
     }
 
+    public boolean isGotAllOk() {
+        return acceptList.size() == 0;
+    }
+
     public void releaseRA() {
 
         state = State.Released;
