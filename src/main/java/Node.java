@@ -20,12 +20,16 @@ public class Node {
 
     private Object lock = new Object();
 
-    public enum State {Released, Requested, Held};
+    public enum State {Released, Requested, Held}
+
+    ;
 
     public State state;
 
-    public ManualResetEvent isAllowedCT;
-    public ManualResetEvent isElectionFinished;
+    public ManualResetEvent isAllowedCT = new ManualResetEvent(false);
+    public ManualResetEvent isElectionFinished = new ManualResetEvent(false);
+
+    boolean _isElectionFinishedBully;
 
     public Node(String ip) {
         self = new NodeInfo(); // consist of IP (method getIp()) and id (method getId()) of the node
@@ -36,9 +40,6 @@ public class Node {
         masterQueue = new LinkedList<Request>();
 
         state = State.Released;
-
-        isAllowedCT = new ManualResetEvent(false);
-        isElectionFinished = new ManualResetEvent(false);
     }
 
     public List<NodeInfo> join(String ipPort) {
@@ -87,7 +88,6 @@ public class Node {
             }
             isMasterElected = true;
 
-            startProcess(isRicart);
             new Thread() {
                 public void run() {
                     startProcess(isRicart);
@@ -100,7 +100,11 @@ public class Node {
 
             }
 
-            startBullyElection(); // start of the master node election
+            new Thread() {
+                public void run() {
+                    startBullyElection(); // start of the master node election
+                }
+            }.start();
         }
     }
 
@@ -112,7 +116,7 @@ public class Node {
                 nodeIDs.add(nodeInfo.getId());
             }
         }
-        boolean _isElectionFinished = false;
+        _isElectionFinishedBully = false;
         if (nodeIDs.size() != 0) {
             Long[] nodeIDsArray = new Long[nodeIDs.size()];
             nodeIDs.toArray(nodeIDsArray);
@@ -130,14 +134,14 @@ public class Node {
                 flag |= msg; // computing if there any node with higher id online
             }
             if (!flag) {
-                _isElectionFinished = true;
+                _isElectionFinishedBully = true;
             }
         } else {
-            _isElectionFinished = true;
+            _isElectionFinishedBully = true;
         }
-        if (_isElectionFinished) {
+        if (_isElectionFinishedBully) {
             System.out.println("This node is a master node");
-            masterNode = self.getIp();
+            setMasterNode(self.getIp());
             for (NodeInfo nodeInfo : dictionary) {
                 Host pds = clientFactoryPDS.getClient(nodeInfo.getIp());
                 pds.setMasterNode(self.getIp()); // sending a notification to all nodes that it is a master
@@ -171,18 +175,23 @@ public class Node {
 
     public void startProcess(boolean isRicart) {
 
-        System.out.println("##### Start process using " + (isRicart ? "Ricart & Agrawala ": "Centralized ")
+        System.out.println("##### Start process using " + (isRicart ? "Ricart & Agrawala " : "Centralized ")
                 + "Algorithm.");
         System.out.println("# 0. Waiting for the Master Election #");
 
         isElectionFinished.reset();
 
         // wait the end of master election - which will be done by other thread.
-        try {
-            isElectionFinished.waitOne();
-        } catch (Exception ex) {
-            System.out.println("Some problem with isElectionFinished.waitOne()");
+
+        if (!_isElectionFinishedBully) {
+            try {
+                isElectionFinished.waitOne();
+            } catch (Exception ex) {
+                System.out.println("Some problem with isElectionFinished.waitOne()");
+            }
         }
+
+        System.out.println("# Master Election ended. Now Start Read & Update Process.");
 
         if (isMasterNode()) {
             return;

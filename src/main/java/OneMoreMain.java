@@ -26,8 +26,8 @@ public class OneMoreMain {
             }
         }
 
-        //HamachiIpPort = "25.124.17.178:9178";
-        HamachiIpPort += ":" + "9179";
+        HamachiIpPort = "25.124.17.178:9179";
+        //HamachiIpPort += ":" + "9179";
         //HamachiIpPort = "25.95.123.198:9178";
         System.out.println("ip:port - " + HamachiIpPort);
         Node node = new Node(HamachiIpPort);

@@ -28,8 +28,12 @@ public class PdsServiceImpl {
         return true;
     }
 
-    public void getStartMsg(boolean isRicart) {
-        node.startProcess(isRicart);
+    public void getStartMsg(final boolean isRicart) {
+        new Thread() {
+            public void run() {
+                node.startProcess(isRicart);
+            }
+        }.start();
     }
 
     public void setMasterNode(String ipAndPort) {
