@@ -1,5 +1,6 @@
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -29,11 +30,11 @@ public class Node {
 
     private Object lock = new Object();
 
-    public enum State {Released, Requested, Held}
-
-    ;
+    public enum State {Released, Requested, Held};
 
     public State state;
+
+    public ManualResetEvent isAllowedCT;
 
     public Node(String ip) {
         self = new NodeInfo(); // consist of IP (method getIp()) and id (method getId()) of the node
@@ -42,6 +43,8 @@ public class Node {
         clientFactoryPDS = new ClientFactoryPDS();
         resource = "";
         masterQueue = new LinkedList<Request>();
+
+        isAllowedCT = new ManualResetEvent(false);
     }
 
     public List<NodeInfo> join(String ipPort) {
@@ -198,13 +201,25 @@ public class Node {
     }
 
     public void processResourceFromMasterNode(boolean isRicart) {
-        Host pds = null;
 
         if (isRicart) {
             // TODO: 24.01.16
         } else {
-            pds = clientFactoryPDS.getClient(masterNode);
-            pds.getSyncRequestCT(self.getId(), self.getIp());
+
+            isAllowedCT.reset();
+
+            new Thread() {
+                public void run() {
+                    Host pds = clientFactoryPDS.getClient(masterNode);
+                    pds.getSyncRequestCT(self.getId(), self.getIp());
+                }
+            }.run();
+
+            try {
+                isAllowedCT.waitOne();
+            } catch (Exception ex) {
+                System.out.println("some problem with isAllowedCT.waitOne()");
+            }
         }
 
         long executeTime = System.currentTimeMillis();
@@ -231,6 +246,7 @@ public class Node {
         if (isRicart) {
             // TODO: 24.01.16
         } else {
+            Host pds = clientFactoryPDS.getClient(masterNode);
             pds.getReleasedMsgCT(self.getId(), self.getIp());
         }
     }
