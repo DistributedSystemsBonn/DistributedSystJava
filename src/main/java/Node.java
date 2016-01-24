@@ -44,6 +44,8 @@ public class Node {
         resource = "";
         masterQueue = new LinkedList<Request>();
 
+        state = State.Released;
+
         isAllowedCT = new ManualResetEvent(false);
     }
 
