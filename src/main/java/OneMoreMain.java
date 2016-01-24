@@ -57,6 +57,7 @@ public class OneMoreMain {
                     System.out.println("Something wrong with server");
                     System.exit(1);
                 }
+                Logger.getRootLogger().setLevel(Level.OFF); // turns off log4j WARN while joining
             }
         }.start();
 
