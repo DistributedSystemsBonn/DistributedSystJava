@@ -54,13 +54,14 @@ public class Node {
 
     private boolean isInterested;
 
+    private List<NodeInfo> hostListWithoutMaster;
+
     public Node(String ip) {
         self = new NodeInfo(); // consist of IP (method getIp()) and id (method getId()) of the node
         self.setIp(ip);
         dictionary = new ArrayList<NodeInfo>(); // consist of information about all nodes in the network
         clientFactoryPDS = new ClientFactoryPDS();
         resource = "";
-        masterQueue = new LinkedList<Request>();
 
         state = State.Released;
 
@@ -69,6 +70,8 @@ public class Node {
         clock = new ExtendedLamportClock(self.getId());
 
         isInterested = false;
+
+        hostListWithoutMaster = new ArrayList<NodeInfo>();
     }
 
     public List<NodeInfo> join(String ipPort) {
@@ -205,6 +208,19 @@ public class Node {
 
     public void startProcess(boolean isRicart) {
 
+        //resource = "";
+        //masterNode = null;
+
+        if (isRicart) {
+            masterQueue = new PriorityQueue<Request>(100, new Comparator<Request>() {
+                public int compare(Request o1, Request o2) {
+                    return Integer.parseInt(Long.toString(o1.getTime() - o2.getTime()));
+                }
+            });
+        } else {
+            masterQueue = new LinkedList<Request>();
+        }
+
         System.out.println("##### Start process using " + (isRicart ? "Ricart & Agrawala " : "Centralized ")
                 + "Algorithm.");
         System.out.println("# 0. Waiting for the Master Election #");
@@ -230,6 +246,12 @@ public class Node {
         int count = 0;
 
         startTime = System.currentTimeMillis();
+
+        hostListWithoutMaster = new ArrayList<NodeInfo>();
+        for (NodeInfo nodeInfo : dictionary) {
+            if (nodeInfo.getIp().equals(masterNode)) continue;
+            hostListWithoutMaster.add(nodeInfo);
+        }
 
         while (true) {
             count++;
@@ -284,15 +306,15 @@ public class Node {
     public void processResourceFromMasterNode(boolean isRicart) {
 
         if (isRicart) {
-            List<NodeInfo> hostListWithoutMaster = new ArrayList<NodeInfo>();
-            for (NodeInfo nodeInfo : dictionary) {
-                if (nodeInfo.getIp().equals(masterNode)) continue;
-                hostListWithoutMaster.add(nodeInfo);
-            }
-
             hasGotAllMessagesBack.reset();
             state = State.Requested;
             isInterested = true;
+
+           /* try {
+                Thread.sleep(5000);
+            } catch (Exception ignored) {
+
+            }*/
 
             System.out.println("Client: [" + self.getIp() + "] Current timestamp: "/* + _module.Clock.Value*/);
             System.out.println("Client: [" + self.getIp() + "] Capacity: " + hostListWithoutMaster.size());
@@ -415,9 +437,16 @@ public class Node {
     protected String readFromMasterNode() throws Exception {
         if (isMasterNode()) throw new Exception();
 
-        Host pds = clientFactoryPDS.getClient(masterNode);
+        String result;
 
-        return pds.readResource(self.getIp());
+        synchronized (Shared.SendLock) {
+            Host pds = clientFactoryPDS.getClient(masterNode);
+            result = pds.readResource(self.getIp());
+        }
+
+        System.out.println("Reading resource result "+ result + " by host with IP: " + self.getIp());
+
+        return result;
     }
 
     protected String getRandomFruitAndNumber() {
@@ -428,7 +457,7 @@ public class Node {
 
     protected void updateMasterNodeResource(String str) throws Exception {
         if (isMasterNode()) throw new Exception();
-        synchronized (this) {
+        synchronized (Shared.SendLock) {
             Host pds = clientFactoryPDS.getClient(masterNode);
             pds.updateResource(str, self.getIp());
         }
@@ -445,7 +474,23 @@ public class Node {
     }
 
     public void addRequest(Request request) {
+        System.out.println("Server: Add request to queue: " + request.getId() + " with timestamp: " + request.getTime());;
         masterQueue.add(request);
+
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println("==================================");
+        System.out.println();
+        System.out.println();
+        System.out.println();
+        System.out.println();
+
+
+        for (Request request1 : masterQueue) {
+            System.out.println("timestamp: " + request1.getTime() + ". IP: " + request1.getIpPort());
+        }
     }
 
     public Request popRequest() {
@@ -456,8 +501,6 @@ public class Node {
         }
         return firstNode;
     }
-
-    public List<Request> QueueRA = new ArrayList<Request>();
 
     public void removeFromAcceptList(String ipPort) {
         System.out.println("SERVER: " + self.getId() + " REMOVE IP: " + ipPort);
@@ -480,11 +523,11 @@ public class Node {
         state = State.Released;
         isInterested = false;
 
-        for (Request request : QueueRA) {
+        for (Request request : masterQueue) {
             sendAcceptResponse(request.getIpPort());
         }
 
-        QueueRA.clear();
+        masterQueue.clear();
 
         System.out.println("Client: Released resource at [" + self.getIp() + "]");
     }
