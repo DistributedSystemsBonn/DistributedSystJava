@@ -112,7 +112,7 @@ public class PdsServiceImpl {
         node.isAllowedCT.set();
     }
 
-    public void getSyncRequestRA(String timestampStr, String idStr, String ipAndPort) {
+    private void innerGetSyncRequestRA(String timestampStr, String idStr, String ipAndPort) {
         int timestamp = Integer.parseInt(timestampStr);
         long id = Long.parseLong(idStr);
 
@@ -142,6 +142,14 @@ public class PdsServiceImpl {
             }
         }
         node.clock.receiveEventHandle(timestamp);
+    }
+
+    public void getSyncRequestRA(final String timestampStr, final String idStr, final String ipAndPort) {
+        new Thread(){
+            public void run() {
+                innerGetSyncRequestRA(timestampStr, idStr, ipAndPort);
+            }
+        }.start();
     }
 
     public void getAcceptResponseRA(String fromIpAndPort, String timestampStr) {
