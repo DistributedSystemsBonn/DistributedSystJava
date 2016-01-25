@@ -324,7 +324,7 @@ public class Node {
             new Thread() {
                 public void run() {
                     Host pds = clientFactoryPDS.getClient(masterNode);
-                    pds.getSyncRequestCT(self.getId(), self.getIp());
+                    pds.getSyncRequestCT(Long.toString(self.getId()), self.getIp());
                 }
             }.run();
 
@@ -360,7 +360,7 @@ public class Node {
             releaseRA();
         } else {
             Host pds = clientFactoryPDS.getClient(masterNode);
-            pds.getReleasedMsgCT(self.getId(), self.getIp());
+            pds.getReleasedMsgCT(Long.toString(self.getId()), self.getIp());
         }
     }
 

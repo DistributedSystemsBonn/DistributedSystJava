@@ -68,7 +68,9 @@ public class PdsServiceImpl {
         System.out.println("::String:: " + node.getResource());
     }
 
-    public void getSyncRequestCT(long id, String ipPort) {
+    public void getSyncRequestCT(String idStr, String ipPort) {
+        long id = Long.parseLong(idStr);
+
         Request request = new Request(0, 0, id, ipPort);
 
         System.out.println("Master: get request from " + id);
@@ -85,7 +87,7 @@ public class PdsServiceImpl {
         pds.getAcceptResponseCT();
     }
 
-    public void getReleasedMsgCT(long id, String fromIpAndPort) {
+    public void getReleasedMsgCT(String idStr, String fromIpAndPort) {
         /*
         * LogHelper.WriteStatus("Master: Released from " + fromIpAndPort);
             _module.State = AccessState.Released;

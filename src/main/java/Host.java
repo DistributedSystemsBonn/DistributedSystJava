@@ -14,8 +14,8 @@ public interface Host {
     String readResource(String ipAndPort);  // read the resource of the master node
     void updateResource(String updateStr, String ipAndPort);  // read the resource of the master node
 
-    void getSyncRequestCT(long id, String ipAndPort);
-    void getReleasedMsgCT(long id, String fromIpAndPort);
+    void getSyncRequestCT(String id, String ipAndPort);
+    void getReleasedMsgCT(String id, String fromIpAndPort);
     void getAcceptResponseCT();
 
     void getSyncRequestRA(int timestamp, long id, String ipAndPort);
