@@ -18,6 +18,6 @@ public interface Host {
     void getReleasedMsgCT(String id, String fromIpAndPort);
     void getAcceptResponseCT();
 
-    void getSyncRequestRA(int timestamp, long id, String ipAndPort);
-    void getAcceptResponseRA(String fromIpAndPort, int timestamp);
+    void getSyncRequestRA(String timestamp, String id, String ipAndPort);
+    void getAcceptResponseRA(String fromIpAndPort, String timestamp);
 }

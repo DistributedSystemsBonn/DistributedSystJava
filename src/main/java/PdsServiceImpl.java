@@ -112,8 +112,10 @@ public class PdsServiceImpl {
         node.isAllowedCT.set();
     }
 
-    public void getSyncRequestRA(int timestamp, long id, String ipAndPort)
-    {
+    public void getSyncRequestRA(String timestampStr, String idStr, String ipAndPort) {
+        int timestamp = Integer.parseInt(timestampStr);
+        long id = Long.parseLong(idStr);
+
         System.out.println("SERVER: RECV " + node.getSelf().getIp() + " FROM: " + ipAndPort + " TIME: " + timestamp);
         // create request object
         Request request = new Request(node.getSelf().getId(), timestamp, id, ipAndPort);
@@ -142,7 +144,9 @@ public class PdsServiceImpl {
         node.clock.receiveEventHandle(timestamp);
     }
 
-    public void getAcceptResponseRA(String fromIpAndPort, int timestamp) {
+    public void getAcceptResponseRA(String fromIpAndPort, String timestampStr) {
+        int timestamp = Integer.parseInt(timestampStr);
+
         String myIp = node.getSelf().getIp();
 
         node.removeFromAcceptList(fromIpAndPort);
@@ -167,7 +171,7 @@ public class PdsServiceImpl {
         synchronized (Shared.SendLock) {
             Host pds = node.clientFactoryPDS.getClient(ipAndPort);
             //send accept response with parameter which describes our host
-            pds.getAcceptResponseRA(node.getSelf().getIp(), node.clock.Value);
+            pds.getAcceptResponseRA(node.getSelf().getIp(), Integer.toString(node.clock.Value));
         }
     }
 }

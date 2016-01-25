@@ -277,7 +277,7 @@ public class Node {
 
         synchronized (Shared.SendLock) {
             Host pds = clientFactoryPDS.getClient(toNode.getIp());
-            pds.getSyncRequestRA(logicClockTs, self.getId(), self.getIp());
+            pds.getSyncRequestRA(Integer.toString(logicClockTs), Long.toString(self.getId()), self.getIp());
         }
     }
 
@@ -496,7 +496,7 @@ public class Node {
         System.out.println("SERVER: " + self.getIp() + " SEND OK TO: " + ipAndPort);
         synchronized (Shared.SendLock) {
             Host pds = clientFactoryPDS.getClient(ipAndPort);
-            pds.getAcceptResponseRA(self.getIp(), clock.Value);
+            pds.getAcceptResponseRA(self.getIp(), Integer.toString(clock.Value));
         }
     }
 }
