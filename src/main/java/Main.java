@@ -14,9 +14,18 @@ public class Main {
         // defining IP of this node
         String HamachiIpPort = null; //
         Enumeration e = NetworkInterface.getNetworkInterfaces();
-        while(e.hasMoreElements()) {
+        while (e.hasMoreElements()) {
             NetworkInterface n = (NetworkInterface) e.nextElement();
-            if (n.getDisplayName().equals("LogMeIn Hamachi Virtual Ethernet Adapter")) {
+            if (n.getDisplayName().equals("ham0")) {
+                Enumeration ee = n.getInetAddresses();
+                if (!ee.hasMoreElements()) {
+                    throw new Exception("Smth wrong with Enumeration ee = n.getInetAddresses()");
+                }
+                InetAddress i = (InetAddress) ee.nextElement();
+                i = (InetAddress) ee.nextElement();
+                i = (InetAddress) ee.nextElement();
+                HamachiIpPort = i.getHostAddress();
+            } else if (n.getDisplayName().equals("LogMeIn Hamachi Virtual Ethernet Adapter")) {
                 Enumeration ee = n.getInetAddresses();
                 if (!ee.hasMoreElements()) {
                     throw new Exception("Smth wrong with Enumeration ee = n.getInetAddresses()");
@@ -26,18 +35,13 @@ public class Main {
             }
         }
         // stop defining
-
-        HamachiIpPort = "25.124.17.178:9178";
-        //HamachiIpPort += ":" + "9178";
-        //HamachiIpPort = "25.95.123.198:9178";
-        System.out.println("ip:port - " + HamachiIpPort);
-        Node node = new Node(HamachiIpPort);
-        PdsServiceImpl.setNode(node);
+        final String finalHamachi = HamachiIpPort;
 
         new Thread() {
             public void run() {
                 try {
-                    WebServer webServer = new WebServer(9178);
+
+                    WebServer webServer = new WebServer(0);
                     XmlRpcServer xmlRpcServer = webServer.getXmlRpcServer();
                     PropertyHandlerMapping phm = new PropertyHandlerMapping();
                     phm.setVoidMethodEnabled(true);
@@ -51,67 +55,73 @@ public class Main {
                     serverConfig.setContentLengthOptional(false);
                     webServer.start();
 
+
+                    String HamachiIpPort = finalHamachi + ":" + webServer.getPort();
+                    System.out.println("ip:port - " + HamachiIpPort);
+                    Node node = new Node(HamachiIpPort);
+                    PdsServiceImpl.setNode(node);
+
+                    System.out.println("The Distributed System");
+                    System.out.println("Select an operation:");
+                    System.out.println(" - join ip:port");
+                    System.out.println(" - gethosts");
+                    System.out.println(" - sign off");
+                    System.out.println(" - start_ct");
+                    System.out.println(" - start_ra");
+                    System.out.println(" - exit");
+
+                    while (true) {
+                        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+                        System.out.print("> ");
+                        String input = br.readLine();
+
+                        if (input.equals("exit")) {
+                            System.exit(0);
+                        } else if (input.length() >= 4 && input.substring(0, 4).equals("join")) {
+                            System.out.println("joining...");
+                            int flg = 1;
+                            for (int i = 0; i < node.getDictionary().size(); i++) {
+                                if (input.substring(5).equals(node.getDictionary().get(i).getIp())) {
+                                    flg = 0;
+                                    break;
+                                }
+                            }
+                            if (input.substring(5).equals(node.getSelf().getIp()) || flg == 0) {
+                                System.out.println("error -- cannot connect to this ip");
+                            } else {
+                                String ipPort = input.substring(5);
+                                node.join(ipPort);
+                            }
+                        } else if (input.equals("gethosts")) {
+                            String[] ipPorts = node.getIpPorts();
+                            for (String ipPort : ipPorts) {
+                                System.out.println(ipPort);
+                            }
+                        } else if (input.equals("sign off")) {
+                            node.signOff();
+                            System.out.println("signed off the network");
+                        } else if (input.equals("start_ct")) {
+                            if (node.getDictionary().size() > 0) {
+                                node.start(false);
+                            } else {
+                                System.out.println("error -- node is not in the network");
+                            }
+                        } else if (input.equals("start_ra")) {
+                            if (node.getDictionary().size() > 0) {
+                                node.start(true);
+                            } else {
+                                System.out.println("error -- node is not in the network");
+                            }
+                        } else {
+                            System.out.println("error -- unknown command");
+                        }
+                    }
+
                 } catch (Exception ex) {
                     System.out.println("Something wrong with server");
                     System.exit(1);
                 }
             }
         }.start();
-
-        System.out.println("The Distributed System");
-        System.out.println("Select an operation:");
-        System.out.println(" - join ip:port");
-        System.out.println(" - gethosts");
-        System.out.println(" - sign off");
-        System.out.println(" - start_ct");
-        System.out.println(" - start_ra");
-        System.out.println(" - exit");
-
-        while (true) {
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            System.out.print("> ");
-            String input = br.readLine();
-
-            if (input.equals("exit")) {
-                System.exit(0);
-            } else if (input.length() >= 4 && input.substring(0, 4).equals("join")) {
-                System.out.println("joining...");
-                int flg = 1;
-                for (int i = 0; i < node.getDictionary().size(); i++) {
-                    if (input.substring(5).equals(node.getDictionary().get(i).getIp())) {
-                        flg = 0;
-                        break;
-                    }
-                }
-                if (input.substring(5).equals(node.getSelf().getIp()) || flg == 0) {
-                    System.out.println("error -- cannot connect to this ip");
-                } else {
-                    String ipPort = input.substring(5);
-                    node.join(ipPort);
-                }
-            } else if (input.equals("gethosts")) {
-                String[] ipPorts = node.getIpPorts();
-                for (String ipPort : ipPorts) {
-                    System.out.println(ipPort);
-                }
-            } else if (input.equals("sign off")) {
-                node.signOff();
-                System.out.println("signed off the network");
-            } else if (input.equals("start_ct")) {
-                if (node.getDictionary().size() > 0) {
-                    node.start(false);
-                } else {
-                    System.out.println("error -- node is not in the network");
-                }
-            }  else if (input.equals("start_ra")){
-                if (node.getDictionary().size() > 0) {
-                    node.start(true);
-                } else {
-                    System.out.println("error -- node is not in the network");
-                }
-            } else {
-                System.out.println("error -- unknown command");
-            }
-        }
     }
 }
