@@ -25,6 +25,9 @@ public class Main {
                 i = (InetAddress) ee.nextElement();
                 i = (InetAddress) ee.nextElement();
                 HamachiIpPort = i.getHostAddress();
+
+                break;
+
             } else if (n.getDisplayName().equals("LogMeIn Hamachi Virtual Ethernet Adapter")) {
                 Enumeration ee = n.getInetAddresses();
                 if (!ee.hasMoreElements()) {
@@ -32,8 +35,20 @@ public class Main {
                 }
                 InetAddress i = (InetAddress) ee.nextElement();
                 HamachiIpPort = i.getHostAddress();
+
+                break;
             }
         }
+
+   /*     if (HamachiIpPort == null) {
+            // попросить ввести айпи
+
+        }
+*/
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Could not find Hamachi. Please, enter your ip manually: ");
+        HamachiIpPort = br.readLine();
+
         // stop defining
         final String finalHamachi = HamachiIpPort;
 
